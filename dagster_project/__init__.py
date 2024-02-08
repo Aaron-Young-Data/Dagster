@@ -1,22 +1,18 @@
-from dagster import (AssetSelection,
-                     Definitions,
-                     define_asset_job,
-                     ScheduleDefinition,
-                     build_schedule_from_partitioned_job,
-                     EnvVar)
+from dagster import (Definitions)
 
 from .assets import *
 from .jobs import *
 from .schedules import *
 from .sensors import *
 
-all_assets = [*f1_predictor_assets]
+all_assets = [*f1_predictor_assets, *calender_update_assets]
 
 defs = Definitions(
     assets=all_assets,
     jobs=[
-        create_prediction_job
+        create_prediction_job,
+        update_calender_job
         ],
-    schedules=[],
-    sensors=[],
+    schedules=[update_calender_job_weekly_schedule],
+    sensors=[create_prediction_job_sensor],
 )
