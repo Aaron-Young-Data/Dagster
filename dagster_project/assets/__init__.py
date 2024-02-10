@@ -1,8 +1,10 @@
-from dagster import load_assets_from_package_module
-from . ML_project import f1_predictor, calender_update
+from dagster import load_assets_from_package_module, load_assets_from_modules
+from . ML_project import f1_predictor, data_update
+#from . ML_project.data_update import calender, session
 
 F1_PREDICTOR = "ML_project"
 f1_predictor_assets = load_assets_from_package_module(package_module=f1_predictor, group_name=F1_PREDICTOR)
 
-F1_CALENDER_UPDATE = "calender_updator"
-calender_update_assets = load_assets_from_package_module(package_module=calender_update, group_name=F1_CALENDER_UPDATE)
+DATA_UPDATE = "data_update"
+data_update_assets = load_assets_from_package_module(package_module=data_update, group_name=DATA_UPDATE)
+
