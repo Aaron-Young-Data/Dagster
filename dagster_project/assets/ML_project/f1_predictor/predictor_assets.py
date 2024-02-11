@@ -132,9 +132,9 @@ def clean_data(context, get_new_session_data: pd.DataFrame):
 
 
 @asset()
-def add_track_data(context, clean_data: pd.DataFrame, session_info: dict, get_track_data: pd.DataFrame):
+def add_track_data(context, clean_data: pd.DataFrame, session_info: dict, get_track_data_sql: pd.DataFrame):
     event_name = session_info['event_name']
-    track_df = get_track_data
+    track_df = get_track_data_sql
     track_info = track_df[track_df['event_name'] == event_name]
     for col in track_info.columns[1:]:
         clean_data[col] = track_info[col].iloc[0]
@@ -147,9 +147,9 @@ def add_track_data(context, clean_data: pd.DataFrame, session_info: dict, get_tr
 
 
 @asset()
-def create_prediction(context, add_track_data: pd.DataFrame, merge_cleaned_data: pd.DataFrame):
+def create_prediction(context, add_track_data: pd.DataFrame):
     lr = LinearRegression()
-    data = merge_cleaned_data
+    data = pd.DataFrame()
     y = data['LapTimeQ']
     x = data.drop('LapTimeQ', axis=1)
     lr.fit(x, y)
