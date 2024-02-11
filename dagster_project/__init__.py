@@ -12,7 +12,8 @@ defs = Definitions(
     jobs=[
         create_prediction_job,
         update_calender_job,
-        session_data_load_job
+        session_data_load_job,
+        session_data_clean_job
         ],
     schedules=[update_calender_job_weekly_schedule],
     sensors=[create_prediction_job_sensor],

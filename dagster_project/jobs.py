@@ -30,3 +30,14 @@ session_data_load_job = define_asset_job("session_data_load_job",
                                                           {"config":
                                                                {'year_list': [2018, 2019, 2020, 2021, 2022, 2023]
                                                                 }}}})
+
+session_data_clean_job = define_asset_job('clean_session_data_job',
+                                          selection=AssetSelection.assets(get_track_data,
+                                                                          session_data_split,
+                                                                          clean_sprint_data,
+                                                                          clean_conventional_data,
+                                                                          merge_cleaned_data,
+                                                                          cleaned_data_to_file
+                                                                          ),
+                                          description="Job to clean the session data from the session_data_load_job"
+                                                      "and output it as a CSV file")
