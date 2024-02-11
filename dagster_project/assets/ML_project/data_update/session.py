@@ -1,6 +1,6 @@
-from dagster import asset, Output, MetadataValue, multi_asset, AssetOut
-import pandas as pd
 import os
+import pandas as pd
+from dagster import asset, Output, MetadataValue, multi_asset, AssetOut
 from dagster_project.fast_f1_functions.collect_data import GetData, CleanData
 
 data = GetData()
@@ -133,7 +133,9 @@ def clean_sprint_data(context, sprint_data: pd.DataFrame):
                            'ULTRASOFT': 2,
                            'SUPERSOFT': 3,
                            'UNKNOWN': 0,
-                           'TEST_UNKNOWN': 0
+                           'TEST_UNKNOWN': 0,
+                           'nan': 0,
+                           '': 0
                            }, inplace=True)
     return Output(value=df,
                   metadata={
@@ -145,7 +147,6 @@ def clean_sprint_data(context, sprint_data: pd.DataFrame):
 @asset()
 def clean_conventional_data(context, conventional_data: pd.DataFrame):
     df = conventional_data
-    df.fillna(value=0, inplace=True)
     df['is_sprint'] = 0
     df.replace(to_replace={'SOFT': 1,
                            'MEDIUM': 2,
@@ -156,8 +157,12 @@ def clean_conventional_data(context, conventional_data: pd.DataFrame):
                            'ULTRASOFT': 2,
                            'SUPERSOFT': 3,
                            'UNKNOWN': 0,
-                           'TEST_UNKNOWN': 0
+                           'TEST_UNKNOWN': 0,
+                           'nan': 0,
+                           '': 0
                            }, inplace=True)
+    df.dropna(how='any', inplace=True)
+    df.to_csv('test.csv')
     return Output(value=df,
                   metadata={
                       'Markdown': MetadataValue.md(df.head().to_markdown()),
@@ -172,13 +177,12 @@ def merge_cleaned_data(context,
                        get_track_data: pd.DataFrame):
     sprint_data = clean_sprint_data
     conventional_data = clean_conventional_data
-    df = pd.merge(sprint_data, conventional_data, on='event_name', how="outer")
+    df = pd.concat([sprint_data, conventional_data])
     df = pd.merge(df, get_track_data, on='event_name', how="outer")
     df.drop(columns=['DriverNumber',
                      'event_name',
                      'year',
                      'event_type',
-                     'Unnamed: 0',
                      'Sector1TimeQ',
                      'Sector2TimeQ',
                      'Sector3TimeQ',
