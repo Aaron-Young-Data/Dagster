@@ -38,7 +38,7 @@ braking,
 asphalt_abrasion,
 lateral_force,
 track_evolution,
-downforce FROM ml_project_dev.cleaned_session_data
+downforce FROM cleaned_session_data
 where sprint_flag = 1 and
 year < 2024 and
 LapTimeQ is not NULL
@@ -83,7 +83,7 @@ braking,
 asphalt_abrasion,
 lateral_force,
 track_evolution,
-downforce FROM ml_project_dev.cleaned_session_data
+downforce FROM cleaned_session_data
 where sprint_flag = 0 and
 year < 2024 and
 LapTimeQ is not NULL

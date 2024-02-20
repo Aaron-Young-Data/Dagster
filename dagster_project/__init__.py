@@ -8,7 +8,7 @@ from .schedules import *
 from .sensors import *
 from .resources import sql_io_manager
 
-all_assets = [*f1_predictor_assets, *data_update_assets]
+all_assets = [*f1_predictor_assets, *data_update_assets, *database_build_assets]
 
 defs = Definitions(
     assets=all_assets,

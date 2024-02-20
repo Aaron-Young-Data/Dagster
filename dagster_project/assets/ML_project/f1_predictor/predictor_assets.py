@@ -1,5 +1,4 @@
 import datetime
-
 import fastf1
 import pandas as pd
 from dagster import asset, Output, MetadataValue
