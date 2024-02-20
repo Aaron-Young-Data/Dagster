@@ -4,3 +4,7 @@ pandas~=2.2.0
 discord.py
 fastf1~=3.2.1
 pytz~=2024.1
+
+scikit-learn~=1.4.0
+pyodbc~=5.1.0
+SQLAlchemy~=2.0.25

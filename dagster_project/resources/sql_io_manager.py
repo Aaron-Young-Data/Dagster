@@ -1,5 +1,3 @@
-from typing import Any
-
 import pandas as pd
 from pandas import (
     DataFrame as PandasDataFrame,

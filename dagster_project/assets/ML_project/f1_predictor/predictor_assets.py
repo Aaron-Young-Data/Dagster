@@ -6,7 +6,12 @@ from dagster import asset, Output, MetadataValue
 from dagster_project.utils.discord_utils import DiscordUtils
 from dagster_project.fast_f1_functions.collect_data import *
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
+import math
 import os
+from dagster_project.utils.file_utils import FileUtils
+from dagster_project.resources.sql_io_manager import MySQLDirectConnection
 
 get_data = GetData()
 clean = CleanData()
@@ -23,7 +28,11 @@ col_list = ['DriverNumber',
             'WindSpeed']
 
 data_loc = os.getenv('DATA_STORE_LOC')
-
+user = os.getenv('SQL_USER')
+password = os.getenv('SQL_PASSWORD')
+database = os.getenv('DATABASE')
+port = os.getenv('SQL_PORT')
+server = os.getenv('SQL_SERVER')
 
 @asset(config_schema={'event_type': str, 'event_name': str, 'year': int})
 def session_info(context):
@@ -37,7 +46,35 @@ def session_info(context):
                             'event_name': event_name,
                             'year': year}
                   )
+@asset()
+def clean_data_from_sql(context):
+    query = FileUtils.file_to_query('sql_clean_data')
+    query = query.replace('{year_number}', str(datetime.date.today().year))
+    context.log.info(f'Query to run: \n{query}')
+    con = MySQLDirectConnection(port, database, user, password, server)
+    df = con.run_query(query=query)
+    df.dropna(how='any', inplace=True)
+    return Output(
+        value=df,
+        metadata={
+            'num_records': len(df),
+            'markdown': MetadataValue.md(df.head().to_markdown())
+        }
+    )
 
+@asset()
+def get_track_data_sql(context):
+    query = FileUtils.file_to_query('sql_track_data')
+    context.log.info(f'Query to run: \n{query}')
+    con = MySQLDirectConnection(port, database, user, password, server)
+    df = con.run_query(query=query)
+    return Output(
+        value=df,
+        metadata={
+            'num_records': len(df),
+            'markdown': MetadataValue.md(df.head().to_markdown())
+        }
+    )
 
 @asset()
 def get_new_session_data(context, session_info: dict):
@@ -123,6 +160,7 @@ def clean_data(context, get_new_session_data: pd.DataFrame):
     else:
         df.dropna(subset=fp_col_data['fp2_cols'] + fp_col_data['fp3_cols'], how='all', inplace=True)
 
+    df.fillna(value=0, inplace=True)
     return Output(value=df,
                   metadata={
                       'Markdown': MetadataValue.md(df.head().to_markdown()),
@@ -138,6 +176,7 @@ def add_track_data(context, clean_data: pd.DataFrame, session_info: dict, get_tr
     track_info = track_df[track_df['event_name'] == event_name]
     for col in track_info.columns[1:]:
         clean_data[col] = track_info[col].iloc[0]
+    clean_data.to_csv('test.csv')
     return Output(value=clean_data,
                   metadata={
                       'Markdown': MetadataValue.md(clean_data.head().to_markdown()),
@@ -147,12 +186,16 @@ def add_track_data(context, clean_data: pd.DataFrame, session_info: dict, get_tr
 
 
 @asset()
-def create_prediction(context, add_track_data: pd.DataFrame):
+def create_prediction(context, add_track_data: pd.DataFrame, clean_data_from_sql: pd.DataFrame):
     lr = LinearRegression()
-    data = pd.DataFrame()
+    data = clean_data_from_sql
     y = data['LapTimeQ']
     x = data.drop('LapTimeQ', axis=1)
-    lr.fit(x, y)
+    x_train, x_test, y_train, y_test = train_test_split(x, y,
+                                                        train_size=0.80,
+                                                        random_state=1)
+    lr.fit(x_train, y_train)
+    y_pred = lr.predict(x_test)
     predict_df = pd.DataFrame()
     for i in range(len(add_track_data)):
         vals = pd.DataFrame()
@@ -168,6 +211,8 @@ def create_prediction(context, add_track_data: pd.DataFrame):
 
     return Output(value=predict_df,
                   metadata={
+                      'Model Score': float(lr.score(x_test, y_test).round(3)),
+                      'RMSE': float(math.sqrt(mean_squared_error(y_test, y_pred))),
                       'Markdown': MetadataValue.md(predict_df.head().to_markdown()),
                       'Rows': len(predict_df)
                   }

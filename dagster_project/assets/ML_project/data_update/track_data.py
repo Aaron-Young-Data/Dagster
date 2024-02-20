@@ -5,11 +5,11 @@ from dagster_project.resources.sql_io_manager import MySQLDirectConnection
 from dagster_project.utils.file_utils import FileUtils
 
 data_loc = os.getenv('DATA_STORE_LOC')
-user = os.getenv('user')
-password = os.getenv('password')
-database = os.getenv('database_dev')
-port = os.getenv('port')
-server = os.getenv('server')
+user = os.getenv('SQL_USER')
+password = os.getenv('SQL_PASSWORD')
+database = os.getenv('DATABASE')
+port = os.getenv('SQL_PORT')
+server = os.getenv('SQL_SERVER')
 
 
 @asset()
@@ -45,16 +45,3 @@ def dim_track_data_to_sql(context, get_track_data_csv: pd.DataFrame):
     )
 
 
-@asset()
-def get_track_data_sql(context):
-    query = FileUtils.file_to_query('sql_track_data')
-    context.log.info(f'Query to run: \n{query}')
-    con = MySQLDirectConnection(port, database, user, password, server)
-    df = con.run_query(query=query)
-    return Output(
-        value=df,
-        metadata={
-            'num_records': len(df),
-            'markdown': MetadataValue.md(df.head().to_markdown())
-        }
-    )

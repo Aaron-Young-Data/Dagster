@@ -7,9 +7,10 @@ import fastf1
 import os
 
 data_loc = os.getenv('DATA_STORE_LOC')
+
+
 @sensor(job=create_prediction_job, minimum_interval_seconds=300)
 def create_prediction_job_sensor(context):
-
     if context.cursor == str(date.today()):
         return SkipReason("Sensor has already run today")
 
@@ -46,9 +47,9 @@ def create_prediction_job_sensor(context):
             # run the prediction job with event info config
             return RunRequest(
                 run_config={'ops': {'session_info': {"config": {'event_type': closest_race['EventFormat'],
-                                                                    'event_name': closest_race['EventName'],
-                                                                    'year': naive.year
-                                                                    }}}}
+                                                                'event_name': closest_race['EventName'],
+                                                                'year': naive.year
+                                                                }}}}
             )
     elif closest_race['EventFormat'] != 'conventional':
         session_time = datetime.strptime(closest_race['Session1DateUtc'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.utc)
@@ -62,7 +63,7 @@ def create_prediction_job_sensor(context):
             context.update_cursor(str(date.today()))
             return RunRequest(
                 run_config={'ops': {'session_info': {"config": {'event_type': closest_race['EventFormat'],
-                                                                    'event_name': closest_race['EventName'],
-                                                                    'year': naive.year
-                                                                    }}}}
+                                                                'event_name': closest_race['EventName'],
+                                                                'year': naive.year
+                                                                }}}}
             )

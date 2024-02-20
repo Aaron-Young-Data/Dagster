@@ -87,20 +87,6 @@ def get_session_data(context):
     )
 
 
-@asset()
-def session_to_file(context, get_session_data: pd.DataFrame):
-    df = get_session_data
-    df.to_csv(f'{data_loc}session_data.csv')
-    return Output(
-        value=df,
-        metadata={
-            'Markdown': MetadataValue.md(df.head().to_markdown()),
-            'Rows': len(df)
-        }
-
-    )
-
-
 @asset(io_manager_key='sql_io_manager_dev', key_prefix=['ml_project_dev', 'raw_session_data', 'cleanup'])
 def session_data_to_sql(context, get_session_data: pd.DataFrame):
     df = get_session_data
@@ -114,35 +100,3 @@ def session_data_to_sql(context, get_session_data: pd.DataFrame):
     )
 
 
-@asset()
-def cleaned_data_to_file(context, clean_data_from_sql: pd.DataFrame):
-    df = clean_data_from_sql
-    df.to_csv(f'{data_loc}data_cleaned.csv')
-    return
-
-
-@asset(non_argument_deps={'session_data_to_sql', 'track_data_to_sql'})
-def clean_data_from_sql(context):
-    query = FileUtils.file_to_query('sql_clean_data')
-    context.log.info(f'Query to run: \n{query}')
-    con = MySQLDirectConnection(port, database, user, password, server)
-    df = con.run_query(query=query)
-    return Output(
-        value=df,
-        metadata={
-            'num_records': len(df),
-            'markdown': MetadataValue.md(df.head().to_markdown())
-        }
-    )
-
-
-@asset(io_manager_key='sql_io_manager_dev', key_prefix=['ml_project_dev', 'cleaned_session_data_sql', 'cleanup'])
-def clean_data_to_sql(context, clean_data_from_sql: pd.DataFrame):
-    df = clean_data_from_sql
-    return Output(
-        value=df,
-        metadata={
-            'num_records': len(df),
-            'markdown': MetadataValue.md(df.head().to_markdown())
-        }
-    )
