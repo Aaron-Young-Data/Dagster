@@ -100,3 +100,11 @@ class MySQLDirectConnection:
         except pyodbc.ProgrammingError as error:
             print(f'Warning: \n {error}')
         return df
+
+    def run_query_no_output(self, query):
+        try:
+            self.conn.execute(query)
+            self.conn.close()
+        except pyodbc.ProgrammingError as error:
+            print(f'Warning: \n {error}')
+        return None
