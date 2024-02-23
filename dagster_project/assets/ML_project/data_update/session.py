@@ -9,11 +9,11 @@ data = GetData()
 clean = CleanData()
 
 data_loc = os.getenv('DATA_STORE_LOC')
-user = os.getenv('user')
-password = os.getenv('password')
-database = os.getenv('database_dev')
-port = os.getenv('port')
-server = os.getenv('server')
+user = os.getenv('SQL_USER')
+password = os.getenv('SQL_PASSWORD')
+database = os.getenv('DATABASE')
+port = os.getenv('SQL_PORT')
+server = os.getenv('SQL_SERVER')
 
 
 @asset(config_schema={'year_list': list})
