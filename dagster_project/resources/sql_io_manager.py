@@ -8,6 +8,7 @@ from dagster import ConfigurableIOManager, OutputContext, InputContext
 from contextlib import contextmanager
 import pyodbc
 from typing import Optional, Sequence
+from mysql.connector import connect
 
 
 @contextmanager
@@ -93,6 +94,10 @@ class MySQLDirectConnection:
         self.engine = create_engine(self.connection_string)
         self.conn = self.engine.connect()
 
+        self.cursor = connect(
+            user=user, password=password, host=server, database=database
+        ).cursor()
+
     def run_query(self, query):
         try:
             df = pd.read_sql(query, self.conn)
@@ -103,8 +108,8 @@ class MySQLDirectConnection:
 
     def run_query_no_output(self, query):
         try:
-            self.conn.execute(query)
-            self.conn.close()
+            self.cursor.execute(query)
+            self.cursor.close()
         except pyodbc.ProgrammingError as error:
             print(f'Warning: \n {error}')
         return None
