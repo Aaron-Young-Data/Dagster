@@ -6,3 +6,4 @@ from .jobs import *
 def update_calender_job_weekly_schedule(context: ScheduleEvaluationContext):
     return RunRequest()
 
+

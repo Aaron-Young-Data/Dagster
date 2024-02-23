@@ -16,12 +16,13 @@ defs = Definitions(
         create_prediction_job,
         update_calender_job,
         session_data_load_job,
-        track_data_load_job
+        track_data_load_job,
+        compound_data_load_job
     ],
     schedules=[update_calender_job_weekly_schedule],
     sensors=[create_prediction_job_sensor],
     resources={
-        'sql_io_manager_dev': sql_io_manager.SQLIOManager(
+        'sql_io_manager': sql_io_manager.SQLIOManager(
             user=os.getenv('SQL_USER'),
             password=os.getenv('SQL_PASSWORD'),
             database=os.getenv('DATABASE'),

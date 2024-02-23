@@ -7,6 +7,7 @@ from .assets import *
 from .assets.ML_project.data_update.session import *
 from .assets.ML_project.data_update.calender import *
 from .assets.ML_project.data_update.track_data import *
+from .assets.ML_project.data_update.compound import *
 
 create_prediction_job = define_asset_job("F1_prediction_job",
                                          selection=AssetSelection.groups(F1_PREDICTOR),
@@ -41,4 +42,9 @@ track_data_load_job = define_asset_job('load_track_data_job',
                                                                        track_data_to_sql,
                                                                        dim_track_data_to_sql),
                                        description='Job to load the track data into MySQL (track_data, dim_track)')
+
+compound_data_load_job = define_asset_job('load_compound_data_job',
+                                          selection=AssetSelection.assets(get_compound_data,
+                                                                          compound_to_sql),
+                                          description='Job to load the compound data into MySQL (dim_compound)')
 
