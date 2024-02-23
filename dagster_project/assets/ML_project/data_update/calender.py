@@ -5,7 +5,7 @@ import pandas as pd
 import os
 
 data_loc = os.getenv('DATA_STORE_LOC')
-
+database = os.getenv('DATABASE')
 @asset
 def get_calender_data(context):
     today = date.today()
@@ -32,7 +32,7 @@ def calender_to_csv(context, get_calender_data: pd.DataFrame):
     return
 
 
-@asset(io_manager_key='sql_io_manager_dev', key_prefix=['ml_project_dev', 'f1_calender', 'cleanup'])
+@asset(io_manager_key='sql_io_manager_dev', key_prefix=[database, 'f1_calender', 'cleanup'])
 def calender_to_sql(context, get_calender_data: pd.DataFrame):
     df = get_calender_data.drop(['Country',
                                  'Location',

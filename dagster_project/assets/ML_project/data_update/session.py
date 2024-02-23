@@ -87,7 +87,7 @@ def get_session_data(context):
     )
 
 
-@asset(io_manager_key='sql_io_manager_dev', key_prefix=['ml_project_dev', 'raw_session_data', 'cleanup'])
+@asset(io_manager_key='sql_io_manager_dev', key_prefix=[database, 'raw_session_data', 'cleanup'])
 def session_data_to_sql(context, get_session_data: pd.DataFrame):
     df = get_session_data
     return Output(
