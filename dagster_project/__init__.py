@@ -8,7 +8,7 @@ from .schedules import *
 from .sensors import *
 from .resources import sql_io_manager
 
-all_assets = [*f1_predictor_assets, *data_update_assets, *database_build_assets]
+all_assets = [*f1_predictor_assets, *data_update_assets, *database_build_assets, *f1_predictor_evaluation_assets]
 
 defs = Definitions(
     assets=all_assets,
@@ -17,10 +17,11 @@ defs = Definitions(
         update_calender_job,
         session_data_load_job,
         track_data_load_job,
-        compound_data_load_job
+        compound_data_load_job,
+        evaluate_prediction_job
     ],
     schedules=[update_calender_job_weekly_schedule],
-    sensors=[create_prediction_job_sensor],
+    sensors=[create_prediction_job_sensor, evaluate_prediction_job_sensor],
     resources={
         'sql_io_manager': sql_io_manager.SQLIOManager(
             user=os.getenv('SQL_USER'),

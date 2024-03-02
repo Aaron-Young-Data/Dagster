@@ -20,6 +20,17 @@ create_prediction_job = define_asset_job("F1_prediction_job",
                                                                 'year': 2023
                                                                 }}}})
 
+evaluate_prediction_job = define_asset_job('evaluation_prediction_job',
+                                           selection=AssetSelection.groups(F1_PREDICTOR_EVAL),
+                                           description='Job to evaluate the performance of the prediction that was made'
+                                                       'and output to discord',
+                                           config={'ops':
+                                                       {'quali_session_info':
+                                                            {"config":
+                                                                 {'event_name': 'Abu Dhabi Grand Prix',
+                                                                  'year': 2023
+                                                                  }}}})
+
 update_calender_job = define_asset_job("update_calender_job",
                                        selection=AssetSelection.assets(get_calender_data,
                                                                        calender_to_csv, calender_to_sql),
@@ -36,7 +47,6 @@ session_data_load_job = define_asset_job("session_data_load_job",
                                                                {'year_list': [2018, 2019, 2020, 2021, 2022, 2023]
                                                                 }}}})
 
-
 track_data_load_job = define_asset_job('load_track_data_job',
                                        selection=AssetSelection.assets(get_track_data_csv,
                                                                        track_data_to_sql,
@@ -47,4 +57,3 @@ compound_data_load_job = define_asset_job('load_compound_data_job',
                                           selection=AssetSelection.assets(get_compound_data,
                                                                           compound_to_sql),
                                           description='Job to load the compound data into MySQL (dim_compound)')
-

@@ -5,12 +5,11 @@ from dagster import asset, Output, MetadataValue
 from dagster_project.utils.discord_utils import DiscordUtils
 from dagster_project.fast_f1_functions.collect_data import *
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
-import math
 import os
 from dagster_project.utils.file_utils import FileUtils
 from dagster_project.resources.sql_io_manager import MySQLDirectConnection
+import matplotlib.pyplot as plt
+from pandas.plotting import table
 
 get_data = GetData()
 clean = CleanData()
@@ -175,7 +174,6 @@ def add_track_data(context, clean_data: pd.DataFrame, session_info: dict, get_tr
     track_info = track_df[track_df['event_name'] == event_name]
     for col in track_info.columns[1:]:
         clean_data[col] = track_info[col].iloc[0]
-    clean_data.to_csv('test.csv')
     return Output(value=clean_data,
                   metadata={
                       'Markdown': MetadataValue.md(clean_data.head().to_markdown()),
@@ -190,11 +188,7 @@ def create_prediction(context, add_track_data: pd.DataFrame, clean_data_from_sql
     data = clean_data_from_sql
     y = data['LapTimeQ']
     x = data.drop('LapTimeQ', axis=1)
-    x_train, x_test, y_train, y_test = train_test_split(x, y,
-                                                        train_size=0.80,
-                                                        random_state=1)
-    lr.fit(x_train, y_train)
-    y_pred = lr.predict(x_test)
+    lr.fit(x, y)
     predict_df = pd.DataFrame()
     for i in range(len(add_track_data)):
         vals = pd.DataFrame()
@@ -210,16 +204,40 @@ def create_prediction(context, add_track_data: pd.DataFrame, clean_data_from_sql
 
     return Output(value=predict_df,
                   metadata={
-                      'Model Score': float(lr.score(x_test, y_test).round(3)),
-                      'RMSE': float(math.sqrt(mean_squared_error(y_test, y_pred))),
                       'Markdown': MetadataValue.md(predict_df.head().to_markdown()),
                       'Rows': len(predict_df)
+                  }
+                  )
+
+@asset()
+def create_table_img(context, create_prediction: pd.DataFrame, session_info: dict):
+    df = create_prediction
+    file_name = str(session_info['event_name']) + '_' + str(session_info['year']) + '.png'
+
+    output_df = pd.DataFrame()
+    output_df['Driver'] = df['drv_no'].astype(int).astype(str)
+    output_df['Predicted Position'] = df['Predicted_POS'].astype(int).astype(str)
+    output_df['Predicted Time'] = df['predicted_time'].astype(float).round(3)
+
+    save_loc = data_loc + file_name
+    fig, ax = plt.subplots()
+    ax.xaxis.set_visible(False)
+    ax.yaxis.set_visible(False)
+
+    ax.table(cellText=output_df.values, colLabels=output_df.columns, loc='center')
+
+    plt.savefig(save_loc)
+
+    return Output(value=save_loc,
+                  metadata={
+                      'File Name': file_name
                   }
                   )
 
 
 @asset()
 def send_discord(context,
+                 create_table_img : str,
                  get_new_session_data: pd.DataFrame,
                  create_prediction: pd.DataFrame,
                  add_track_data: pd.DataFrame,
@@ -237,7 +255,6 @@ def send_discord(context,
 
     year = session_info['year']
     event_name = session_info['event_name']
-    justify = 'left'
 
     output_df = pd.DataFrame()
     output_df['Driver'] = create_prediction['drv_no'].astype(int)
@@ -248,6 +265,6 @@ def send_discord(context,
     dis = DiscordUtils()
     dis.send_message(message=f'New prediction is available for {year} - {event_name}!\n'
                              f'These drivers where replaced in FP1: {drivers_replaced}\n'
-                             f'There are {missing_drivers} missing drivers.\n'
-                             f'Prediction:\n\n{output_df.to_string(index=False, justify=justify, col_space=20)}')
+                             f'There are {missing_drivers} missing drivers.\n',
+                     attachment=[create_table_img])
     return
