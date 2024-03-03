@@ -18,10 +18,13 @@ defs = Definitions(
         session_data_load_job,
         track_data_load_job,
         compound_data_load_job,
-        evaluate_prediction_job
+        evaluate_prediction_job,
+        weekend_session_data_load_job
     ],
     schedules=[update_calender_job_weekly_schedule],
-    sensors=[create_prediction_job_sensor, evaluate_prediction_job_sensor],
+    sensors=[create_prediction_job_sensor,
+             evaluate_prediction_job_sensor,
+             weekend_session_data_load_job_sensor],
     resources={
         'sql_io_manager': sql_io_manager.SQLIOManager(
             user=os.getenv('SQL_USER'),

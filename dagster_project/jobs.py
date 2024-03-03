@@ -47,6 +47,18 @@ session_data_load_job = define_asset_job("session_data_load_job",
                                                                {'year_list': [2018, 2019, 2020, 2021, 2022, 2023]
                                                                 }}}})
 
+weekend_session_data_load_job = define_asset_job("weekend_session_data_load_job",
+                                                 selection=AssetSelection.assets(get_session_data_weekend,
+                                                                                 session_data_to_sql_append),
+                                                 description="Job to upload the selected weekend data to MySQL",
+                                                 config={'ops':
+                                                             {'get_session_data_weekend':
+                                                                  {"config":
+                                                                       {'event_type': 'conventional',
+                                                                        'event_name': 'Abu Dhabi Grand Prix',
+                                                                        'year': 2023
+                                                                        }}}})
+
 track_data_load_job = define_asset_job('load_track_data_job',
                                        selection=AssetSelection.assets(get_track_data_csv,
                                                                        track_data_to_sql,

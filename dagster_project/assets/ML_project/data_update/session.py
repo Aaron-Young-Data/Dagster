@@ -99,4 +99,74 @@ def session_data_to_sql(context, get_session_data: pd.DataFrame):
 
     )
 
+@asset(config_schema={'event_type': str, 'event_name': str, 'year': int})
+def get_session_data_weekend(context):
+    event_type = context.op_config['event_type']
+    event_name = context.op_config['event_name']
+    year = context.op_config['year']
 
+    if event_type == 'conventional':
+        session_list = ['FP1', 'FP2', 'FP3', 'Q']
+    else:
+        session_list = ['FP1', 'Q']
+
+    event_data = pd.DataFrame()
+    for session in session_list:
+        session_data = data.session_data(year=year, location=event_name, session=session)
+        fastest_laps = data.fastest_laps(session_data=session_data)
+        if len(fastest_laps) == 0:
+            break
+        fastest_laps_ordered = clean.order_laps_delta(laps=fastest_laps, include_pos=False)
+        needed_data = fastest_laps_ordered[['DriverNumber',
+                                            'LapTime',
+                                            'Sector1Time',
+                                            'Sector2Time',
+                                            'Sector3Time',
+                                            'Compound',
+                                            'AirTemp',
+                                            'Rainfall',
+                                            'TrackTemp',
+                                            'WindDirection',
+                                            'WindSpeed']]
+        session_df = clean.time_cols_to_seconds(column_names=['LapTime',
+                                                              'Sector1Time',
+                                                              'Sector2Time',
+                                                              'Sector3Time'],
+                                                dataframe=needed_data)
+
+        try:
+            suffix = "FP" + str(int(session[-1:]))
+        except:
+            suffix = 'Q'
+
+        if event_data.empty:
+            event_data = session_df.add_suffix(suffix)
+            event_data = event_data.rename(columns={f'DriverNumber{suffix}': 'DriverNumber'})
+        else:
+            session_df = session_df.add_suffix(suffix)
+            session_df = session_df.rename(columns={f'DriverNumber{suffix}': 'DriverNumber'})
+            event_data = pd.merge(event_data, session_df, on='DriverNumber', how="outer")
+
+    event_data['event_name'] = event_name
+    event_data['year'] = year
+    event_data['event_type'] = event_type
+    return Output(
+        value=event_data,
+        metadata={
+            'Markdown': MetadataValue.md(event_data.head().to_markdown()),
+            'Rows': len(event_data)
+        }
+
+    )
+
+@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'raw_session_data'])
+def session_data_to_sql_append(context, get_session_data_weekend: pd.DataFrame):
+    df = get_session_data_weekend
+    return Output(
+        value=df,
+        metadata={
+            'Markdown': MetadataValue.md(df.head().to_markdown()),
+            'Rows': len(df)
+        }
+
+    )
