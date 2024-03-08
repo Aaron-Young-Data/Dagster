@@ -146,17 +146,18 @@ def clean_data(context, get_new_session_data: pd.DataFrame):
 
     df = df.astype(float)
 
-    for col_num in range(len(fp_col_data['fp1_cols'])):
-        df[fp_col_data['fp1_cols'][col_num]].fillna(value=df[fp_col_data['fp2_cols'][col_num]], inplace=True)
-        df[fp_col_data['fp1_cols'][col_num]].replace(to_replace=0, value=df[fp_col_data['fp1_cols'][col_num]].mean(),
-                                                     inplace=True)
+   # for col_num in range(len(fp_col_data['fp1_cols'])):
+   #     df[fp_col_data['fp1_cols'][col_num]].fillna(value=df[fp_col_data['fp2_cols'][col_num]], inplace=True)
+   #     df[fp_col_data['fp1_cols'][col_num]].replace(to_replace=0, value=df[fp_col_data['fp1_cols'][col_num]].mean(),
+   #                                                  inplace=True)
 
     context.log.info(
         'If this equals zero its a sprint weekend: ' + str(df['LapTimeFP2'].sum() + df['LapTimeFP3'].sum()))
     if df['LapTimeFP2'].sum() + df['LapTimeFP3'].sum() == 0:
+        df.dropna(subset=fp_col_data['fp1_cols'], how='all', inplace=True)
         df.fillna(value=0, inplace=True)
     else:
-        df.dropna(subset=fp_col_data['fp2_cols'] + fp_col_data['fp3_cols'], how='all', inplace=True)
+        df.dropna(how='any', inplace=True)
 
     df.fillna(value=0, inplace=True)
     return Output(value=df,
@@ -243,13 +244,15 @@ def send_discord(context,
                  add_track_data: pd.DataFrame,
                  session_info: dict):
     if len(get_new_session_data) > 20:
-        drivers_replaced = get_new_session_data[get_new_session_data['LapTimeFP1'].isna()]['DriverNumber'].to_list()
-        drivers_replaced = tuple(drivers_replaced)
+        drivers_session = get_new_session_data['DriverNumber'].astype(int).to_list()
+        drivers_prediction = create_prediction['drv_no'].astype(int).to_list()
+        drivers_missing = [x for x in drivers_session if x not in set(drivers_prediction)]
+        drivers_missing = tuple(drivers_missing)
     else:
-        drivers_replaced = None
+        drivers_missing = None
 
     if len(add_track_data) < 20:
-        missing_drivers = -(len(add_track_data) - 20)
+        missing_drivers = -(len(add_track_data) - len(get_new_session_data))
     else:
         missing_drivers = 'no'
 
@@ -264,7 +267,7 @@ def send_discord(context,
     context.log.info(output_df.to_string(index=False, justify='left'))
     dis = DiscordUtils()
     dis.send_message(message=f'New prediction is available for {year} - {event_name}!\n'
-                             f'These drivers where replaced in FP1: {drivers_replaced}\n'
+                             f'These drivers are missing from the prediction: {drivers_missing}\n'
                              f'There are {missing_drivers} missing drivers.\n',
                      attachment=[create_table_img])
     return
