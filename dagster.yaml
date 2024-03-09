@@ -1,0 +1,32 @@
+retention:
+  schedule:
+    purge_after_days: 90
+  sensor:
+    purge_after_days:
+      skipped: 7
+      failure: 30
+      success: -1
+
+run_queue:
+  max_concurrent_runs: 4
+
+sensors:
+  use_threads: true
+  num_workers: 4
+
+schedules:
+  use_threads: true
+  num_workers: 4
+
+storage:
+  mysql:
+    mysql_db:
+      username:
+        env: SQL_USER
+      password:
+        env: SQL_PASSWORD
+      hostname:
+        env: SQL_SERVER
+      db_name:
+        env: LOG_DATABASE
+      port: 3306

@@ -8,3 +8,4 @@ scikit-learn
 pyodbc
 SQLAlchemy
 seaborn
+dagster-mysql

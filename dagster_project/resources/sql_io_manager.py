@@ -1,3 +1,4 @@
+import mysql.connector
 import pandas as pd
 from pandas import (
     DataFrame as PandasDataFrame,
@@ -8,7 +9,7 @@ from dagster import ConfigurableIOManager, OutputContext, InputContext
 from contextlib import contextmanager
 import pyodbc
 from typing import Optional, Sequence
-from mysql.connector import connect
+import mysql.connector
 
 
 @contextmanager
@@ -94,9 +95,12 @@ class MySQLDirectConnection:
         self.engine = create_engine(self.connection_string)
         self.conn = self.engine.connect()
 
-        self.cursor = connect(
+        self.cursor_conn = mysql.connector.connect(
             user=user, password=password, host=server, database=database
-        ).cursor()
+        )
+
+        self.cursor = self.cursor_conn.cursor()
+
 
     def run_query(self, query):
         try:
@@ -110,6 +114,7 @@ class MySQLDirectConnection:
         try:
             self.cursor.execute(query)
             self.cursor.close()
+            self.cursor_conn.close()
         except pyodbc.ProgrammingError as error:
             print(f'Warning: \n {error}')
         return None

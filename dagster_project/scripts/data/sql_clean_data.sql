@@ -40,7 +40,6 @@ lateral_force,
 track_evolution,
 downforce FROM cleaned_session_data
 where sprint_flag = 1 and
-year < {year_number} and
 LapTimeQ is not NULL
 UNION
 SELECT
@@ -85,5 +84,4 @@ lateral_force,
 track_evolution,
 downforce FROM cleaned_session_data
 where sprint_flag = 0 and
-year < {year_number} and
 LapTimeQ is not NULL
