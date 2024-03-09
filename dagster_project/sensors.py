@@ -26,15 +26,17 @@ def create_prediction_job_sensor(context):
     # this find the closes race in the calendar
     closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
 
-    # adds one hour to the current time as data is not normally avable till 30 - 60 mins after session
-    time_modified = (utc_dt + timedelta(hours=2)).replace(tzinfo=pytz.utc)
-
     # check the race weekend type
     if closest_race['EventFormat'] == 'conventional':
+        # get the session start time
         session_time = datetime.strptime(closest_race['Session3DateUtc'],
                                          '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.utc)
+
+        # add 1.5 hours to the session start time 1 hour for the session 30 mins for the data to be available
+        session_time_modified = (session_time + timedelta(hours=1.5)).replace(tzinfo=pytz.utc)
+
         # check if we are after the needed session + 1hr
-        if session_time < time_modified:
+        if session_time_modified < utc_dt:
             # attempts to collect data and load it
             try:
                 session_data = fastf1.get_session(year=naive.year,
@@ -52,8 +54,15 @@ def create_prediction_job_sensor(context):
                                                                 }}}}
             )
     elif closest_race['EventFormat'] != 'conventional':
-        session_time = datetime.strptime(closest_race['Session1DateUtc'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.utc)
-        if session_time < time_modified:
+        # get the session start time
+        session_time = datetime.strptime(closest_race['Session1DateUtc'],
+                                         '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.utc)
+
+        # add 1.5 hours to the session start time 1 hour for the session 30 mins for the data to be available
+        session_time_modified = (session_time + timedelta(hours=1.5)).replace(tzinfo=pytz.utc)
+
+        # check if we are after the needed session + 1hr
+        if session_time_modified < utc_dt:
             try:
                 session_data = fastf1.get_session(year=naive.year,
                                                   gp=int(closest_race['RoundNumber']),
@@ -86,14 +95,22 @@ def evaluate_prediction_job_sensor(context):
     # this find the closes race in the calendar
     closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
 
-    # adds one hour to the current time as data is not normally avable till 30 - 60 mins after session
-    time_modified = (utc_dt + timedelta(hours=2)).replace(tzinfo=pytz.utc)
+    # get the next qualifying section date
+    quali_dt = pd.to_datetime(closest_race['Session4DateUtc']).date()
 
-    # check if we are after the needed session + 1hr
+    # check if it is qualifying day
+    if quali_dt != date.today():
+        return SkipReason(f'Qualifying is not today! Next qualifying session dt: {quali_dt}')
+
+    # get the session start time
     session_time = datetime.strptime(closest_race['Session4DateUtc'],
                                      '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.utc)
-    # check if we are after the needed session + 1hr
-    if session_time < time_modified:
+
+    # add 1.5 hours to the session start time 1 hour for the session 30 mins for the data to be available
+    session_time_modified = (session_time + timedelta(hours=1.5)).replace(tzinfo=pytz.utc)
+
+    # check if we are after the needed session + 30 mins
+    if session_time_modified < utc_dt:
         # attempts to collect data and load it
         try:
             session_data = fastf1.get_session(year=naive.year,
@@ -109,6 +126,8 @@ def evaluate_prediction_job_sensor(context):
                                                                   'year': naive.year
                                                                   }}}}
         )
+    else:
+        return SkipReason("It is not 30 mins after the session")
 
 
 @sensor(job=weekend_session_data_load_job, minimum_interval_seconds=300)
@@ -128,14 +147,22 @@ def weekend_session_data_load_job_sensor(context):
     # this find the closes race in the calendar
     closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
 
-    # adds one hour to the current time as data is not normally avable till 30 - 60 mins after session
-    time_modified = (utc_dt + timedelta(hours=2)).replace(tzinfo=pytz.utc)
+    # get the next qualifying section date
+    quali_dt = pd.to_datetime(closest_race['Session4DateUtc']).date()
 
-    # check if we are after the needed session + 1hr
+    # check if it is qualifying day
+    if quali_dt != date.today():
+        return SkipReason(f'Qualifying is not today! Next qualifying session dt: {quali_dt}')
+
+    # get the session start time
     session_time = datetime.strptime(closest_race['Session4DateUtc'],
                                      '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.utc)
-    # check if we are after the needed session + 1hr
-    if session_time < time_modified:
+
+    # add 1.5 hours to the session start time 1 hour for the session 30 mins for the data to be available
+    session_time_modified = (session_time + timedelta(hours=1.5)).replace(tzinfo=pytz.utc)
+
+    # check if we are after the needed session + 30 mins
+    if session_time_modified < utc_dt:
         # attempts to collect data and load it
         try:
             session_data = fastf1.get_session(year=naive.year,
@@ -152,3 +179,5 @@ def weekend_session_data_load_job_sensor(context):
                                                                         'year': naive.year
                                                                         }}}}
         )
+    else:
+        return SkipReason("It is not 30 mins after the session")
