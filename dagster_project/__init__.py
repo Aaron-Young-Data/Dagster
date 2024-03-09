@@ -21,7 +21,9 @@ defs = Definitions(
         evaluate_prediction_job,
         weekend_session_data_load_job
     ],
-    schedules=[update_calender_job_weekly_schedule],
+    schedules=[update_calender_job_weekly_schedule,
+               update_compound_job_weekly_schedule,
+               update_track_job_weekly_schedule],
     sensors=[create_prediction_job_sensor,
              evaluate_prediction_job_sensor,
              weekend_session_data_load_job_sensor],
