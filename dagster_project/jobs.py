@@ -23,7 +23,7 @@ create_prediction_job = define_asset_job("F1_prediction_job",
 evaluate_prediction_job = define_asset_job('evaluation_prediction_job',
                                            selection=AssetSelection.groups(F1_PREDICTOR_EVAL),
                                            description='Job to evaluate the performance of the prediction that was made'
-                                                       'and output to discord',
+                                                       ' and output to discord',
                                            config={'ops':
                                                        {'quali_session_info':
                                                             {"config":
@@ -40,7 +40,7 @@ session_data_load_job = define_asset_job("session_data_load_job",
                                          selection=AssetSelection.assets(get_session_data,
                                                                          session_data_to_sql),
                                          description="Job to pull of session data for a list of years (2018+)"
-                                                     "and upload the data to MySQL and CSV",
+                                                     " and upload the data to MySQL and CSV",
                                          config={'ops':
                                                      {'get_session_data':
                                                           {"config":
