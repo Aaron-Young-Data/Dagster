@@ -1,7 +1,9 @@
 DROP TABLE IF EXISTS raw_session_data;
 
 CREATE TABLE raw_session_data (
+Driver varchar(3),
 DriverNumber int,
+Team varchar(20),
 LapTimeFP1 float,
 Sector1TimeFP1 float,
 Sector2TimeFP1 float,

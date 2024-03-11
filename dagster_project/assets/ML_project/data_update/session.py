@@ -4,6 +4,7 @@ from dagster import asset, Output, MetadataValue, multi_asset, AssetOut
 from dagster_project.fast_f1_functions.collect_data import GetData, CleanData
 from dagster_project.resources.sql_io_manager import MySQLDirectConnection
 from dagster_project.utils.file_utils import FileUtils
+from datetime import date
 
 data = GetData()
 clean = CleanData()
@@ -18,16 +19,22 @@ server = os.getenv('SQL_SERVER')
 
 @asset(config_schema={'year_list': list})
 def get_session_data(context):
+    today = date.today()
     full_data = pd.DataFrame()
     year_list = context.op_config['year_list']
     context.log.info(str(year_list))
+
+    calendar = pd.read_csv(f"{data_loc}calender.csv")
+
     for year in year_list:
-        context.log.info(year)
-        calendar = data.get_calender(year)
-        races = calendar['EventName'].to_list()
+        races_df = calendar[(pd.to_datetime(calendar['EventDate']).dt.date < today) &
+                            (pd.to_datetime(calendar['EventDate']).dt.year == year)]
+
+        races = races_df['EventName'].to_list()
         for race in races:
-            event_type = calendar[calendar['EventName'] == race]['EventFormat'].to_list()[0]
-            all_sessions = data.session_list(calendar[calendar['EventName'] == race][['Session1',
+            context.log.info(f'Currently getting event: {race} - {year}')
+            event_type = races_df[races_df['EventName'] == race]['EventFormat'].to_list()[0]
+            all_sessions = data.session_list(races_df[races_df['EventName'] == race][['Session1',
                                                                                       'Session2',
                                                                                       'Session3',
                                                                                       'Session4',
@@ -35,6 +42,7 @@ def get_session_data(context):
             sessions_practice = [x for x in all_sessions if 'Practice' in x]
             sessions_practice.append('Qualifying')
             sessions = sessions_practice
+            context.log.info(f'Getting sessions: {tuple(sessions)}')
             if 'Practice' in sessions[len(sessions) - 1]:
                 sessions = sessions.pop()
             event_data = pd.DataFrame()
@@ -44,7 +52,9 @@ def get_session_data(context):
                 if len(fastest_laps) == 0:
                     break
                 fastest_laps_ordered = clean.order_laps_delta(laps=fastest_laps, include_pos=False)
-                needed_data = fastest_laps_ordered[['DriverNumber',
+                needed_data = fastest_laps_ordered[['Driver',
+                                                    'DriverNumber',
+                                                    'Team',
                                                     'LapTime',
                                                     'Sector1Time',
                                                     'Sector2Time',
@@ -69,10 +79,14 @@ def get_session_data(context):
                 if event_data.empty:
                     event_data = session_df.add_suffix(suffix)
                     event_data = event_data.rename(columns={f'DriverNumber{suffix}': 'DriverNumber'})
+                    event_data = event_data.rename(columns={f'Team{suffix}': 'Team'})
+                    event_data = event_data.rename(columns={f'Driver{suffix}': 'Driver'})
                 else:
                     session_df = session_df.add_suffix(suffix)
                     session_df = session_df.rename(columns={f'DriverNumber{suffix}': 'DriverNumber'})
-                    event_data = pd.merge(event_data, session_df, on='DriverNumber', how="outer")
+                    session_df = session_df.rename(columns={f'Team{suffix}': 'Team'})
+                    session_df = session_df.rename(columns={f'Driver{suffix}': 'Driver'})
+                    event_data = pd.merge(event_data, session_df, on=['DriverNumber', 'Driver', 'Team'], how="outer")
             event_data['event_name'] = race
             event_data['year'] = year
             event_data['event_type'] = event_type
@@ -98,6 +112,7 @@ def session_data_to_sql(context, get_session_data: pd.DataFrame):
         }
 
     )
+
 
 @asset(config_schema={'event_type': str, 'event_name': str, 'year': int})
 def get_session_data_weekend(context):
@@ -158,6 +173,7 @@ def get_session_data_weekend(context):
         }
 
     )
+
 
 @asset(io_manager_key='sql_io_manager', key_prefix=[database, 'raw_session_data'])
 def session_data_to_sql_append(context, get_session_data_weekend: pd.DataFrame):

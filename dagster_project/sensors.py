@@ -1,12 +1,18 @@
 import pandas as pd
-from dagster import sensor, RunRequest, SkipReason
+from dagster import sensor, RunRequest, SkipReason, DagsterRunStatus, RunsFilter
 from dagster_project.jobs import *
 from datetime import datetime, date, timedelta
 import pytz
 import fastf1
 import os
+from dagster_project.resources.sql_io_manager import MySQLDirectConnection
 
 data_loc = os.getenv('DATA_STORE_LOC')
+user = os.getenv('SQL_USER')
+password = os.getenv('SQL_PASSWORD')
+database = os.getenv('DATABASE')
+port = os.getenv('SQL_PORT')
+server = os.getenv('SQL_SERVER')
 
 
 @sensor(job=create_prediction_job, minimum_interval_seconds=300)
@@ -181,3 +187,28 @@ def weekend_session_data_load_job_sensor(context):
         )
     else:
         return SkipReason("It is not 30 mins after the session")
+
+
+@sensor(job=session_data_load_job, minimum_interval_seconds=300)
+def session_data_load_job_sensor(context):
+    today = date.today()
+    year = today.year
+    year_list = list(range(2018, year+1))
+    run_records = context.instance.get_run_records(
+        RunsFilter(job_name="session_data_load_job", statuses=[DagsterRunStatus.STARTED])
+    )
+    if len(run_records) == 0:
+        query = FileUtils.file_to_query('session_data_sensor')
+        con = MySQLDirectConnection(port, database, user, password, server)
+        df = con.run_query(query=query)
+        row_count = int(df['RowCount'])
+        if row_count == 0:
+            return RunRequest(
+                job_name='session_data_load_job',
+                run_config={'ops': {'get_session_data': {"config": {'year_list': year_list
+                                                                    }}}})
+
+        else:
+            return SkipReason(f'Current row count: {int(row_count)}')
+    else:
+        return SkipReason('Job is already running!')
