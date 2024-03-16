@@ -10,10 +10,7 @@ dtr.Sector2TimeFP1 AS Sector2TimeFP1,
 dtr.Sector3TimeFP1 AS Sector3TimeFP1,
 fp1comp.compound_cd AS CompoundFP1,
 dtr.AirTempFP1 AS AirTempFP1,
-(CASE
-    WHEN (dtr.RainfallFP1 = 'FALSE') THEN 0
-    ELSE '1'
-END) AS RainfallFP1,
+dtr.RainfallFP1  AS RainfallFP1,
 dtr.TrackTempFP1 AS TrackTempFP1,
 dtr.WindDirectionFP1 AS WindDirectionFP1,
 dtr.WindSpeedFP1 AS WindSpeedFP1,
@@ -23,10 +20,7 @@ dtr.Sector2TimeFP2 AS Sector2TimeFP2,
 dtr.Sector3TimeFP2 AS Sector3TimeFP2,
 fp2comp.compound_cd AS CompoundFP2,
 dtr.AirTempFP2 AS AirTempFP2,
-(CASE
-    WHEN (dtr.RainfallFP2 = 'FALSE') THEN 0
-    ELSE '1'
-END) AS RainfallFP2,
+dtr.RainfallFP2  AS RainfallFP2,
 dtr.TrackTempFP2 AS TrackTempFP2,
 dtr.WindDirectionFP2 AS WindDirectionFP2,
 dtr.WindSpeedFP2 AS WindSpeedFP2,
@@ -36,10 +30,7 @@ dtr.Sector2TimeFP3 AS Sector2TimeFP3,
 dtr.Sector3TimeFP3 AS Sector3TimeFP3,
 fp3comp.compound_cd AS CompoundFP3,
 dtr.AirTempFP3 AS AirTempFP3,
-(CASE
-    WHEN (dtr.RainfallFP3 = 'FALSE') THEN 0
-    ELSE '1'
-END) AS RainfallFP3,
+dtr.RainfallFP3 AS RainfallFP3,
 dtr.TrackTempFP3 AS TrackTempFP3,
 dtr.WindDirectionFP3 AS WindDirectionFP3,
 dtr.WindSpeedFP3 AS WindSpeedFP3,
