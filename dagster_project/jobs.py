@@ -1,13 +1,15 @@
 from dagster import (
     AssetSelection,
-    define_asset_job,
-    ScheduleDefinition)
+    define_asset_job)
 
 from .assets import *
 from .assets.ML_project.data_update.session import *
 from .assets.ML_project.data_update.calender import *
 from .assets.ML_project.data_update.track_data import *
 from .assets.ML_project.data_update.compound import *
+from .assets.ML_project.data_update.weather_forcast import *
+from .partitions import daily_partitions
+
 
 create_prediction_job = define_asset_job("F1_prediction_job",
                                          selection=AssetSelection.groups(F1_PREDICTOR),
@@ -69,3 +71,10 @@ compound_data_load_job = define_asset_job('load_compound_data_job',
                                           selection=AssetSelection.assets(get_compound_data,
                                                                           compound_to_sql),
                                           description='Job to load the compound data into MySQL (dim_compound)')
+
+weather_forecast_data_load_job = define_asset_job('load_weather_forcast_data_job',
+                                         selection=AssetSelection.assets(get_calender_locations_sql,
+                                                                         get_weather_forcast_data,
+                                                                         weather_forcast_to_sql),
+                                         description='Job to upload the weather forcast',
+                                         partitions_def=daily_partitions)

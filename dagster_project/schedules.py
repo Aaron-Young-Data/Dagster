@@ -1,5 +1,6 @@
-from dagster import schedule, ScheduleEvaluationContext, RunRequest
+from dagster import schedule, ScheduleEvaluationContext, RunRequest, build_schedule_from_partitioned_job
 from .jobs import *
+from .partitions import daily_partitions
 
 
 @schedule(job=update_calender_job,
@@ -23,3 +24,8 @@ def update_track_job_weekly_schedule(context: ScheduleEvaluationContext):
     return RunRequest()
 
 
+weather_forcast_schedule = build_schedule_from_partitioned_job(
+    job=weather_forecast_data_load_job,
+    hour_of_day=0,
+    minute_of_hour=5
+)

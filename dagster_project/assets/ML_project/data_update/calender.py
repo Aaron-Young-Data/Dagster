@@ -35,7 +35,6 @@ def calender_to_csv(context, get_calender_data: pd.DataFrame):
 @asset(io_manager_key='sql_io_manager', key_prefix=[database, 'f1_calender', 'cleanup'])
 def calender_to_sql(context, get_calender_data: pd.DataFrame):
     df = get_calender_data.drop(['Country',
-                                 'Location',
                                  'OfficialEventName',
                                  'F1ApiSupport',
                                  'Session1Date',
@@ -50,3 +49,4 @@ def calender_to_sql(context, get_calender_data: pd.DataFrame):
             'Rows': len(df),
         }
     )
+

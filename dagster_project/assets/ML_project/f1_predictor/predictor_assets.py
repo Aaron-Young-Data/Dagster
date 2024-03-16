@@ -146,13 +146,9 @@ def clean_data(context, get_new_session_data: pd.DataFrame):
 
     df = df.astype(float)
 
-   # for col_num in range(len(fp_col_data['fp1_cols'])):
-   #     df[fp_col_data['fp1_cols'][col_num]].fillna(value=df[fp_col_data['fp2_cols'][col_num]], inplace=True)
-   #     df[fp_col_data['fp1_cols'][col_num]].replace(to_replace=0, value=df[fp_col_data['fp1_cols'][col_num]].mean(),
-   #                                                  inplace=True)
-
     context.log.info(
         'If this equals zero its a sprint weekend: ' + str(df['LapTimeFP2'].sum() + df['LapTimeFP3'].sum()))
+
     if df['LapTimeFP2'].sum() + df['LapTimeFP3'].sum() == 0:
         df.dropna(subset=fp_col_data['fp1_cols'], how='all', inplace=True)
         df.fillna(value=0, inplace=True)
