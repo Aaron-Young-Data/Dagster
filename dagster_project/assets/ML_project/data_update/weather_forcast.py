@@ -4,7 +4,7 @@ import os
 import pandas as pd
 from dagster_project.resources.sql_io_manager import MySQLDirectConnection
 from dagster_project.utils.file_utils import FileUtils
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import urllib
 from dagster_project.partitions import daily_partitions
 
@@ -39,7 +39,9 @@ def get_calender_locations_sql(context):
 @asset(partitions_def=daily_partitions)
 def get_weather_forcast_data(context, get_calender_locations_sql: pd.DataFrame):
     partition_date_str = context.partition_key
-    forcast_date = datetime.strptime(partition_date_str, '%Y-%M-%d')
+    forcast_date = datetime.strptime(partition_date_str, '%Y-%m-%d').date()
+
+    context.log.info('Getting forcast for: {}'.format(forcast_date))
 
     location_df = get_calender_locations_sql
 
@@ -49,10 +51,10 @@ def get_weather_forcast_data(context, get_calender_locations_sql: pd.DataFrame):
 
     for location in locations:
         api_query = ('https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{}/{}/{'
-                     '}?key={}&options=nonulls&unitGroup=metric&include=hours').format(location,
-                                                                                       str(forcast_date.date()),
-                                                                                       str(forcast_date.date()),
-                                                                                       weather_data_key)
+                     '}?key={}&unitGroup=metric&include=hours').format(location,
+                                                                       str(forcast_date),
+                                                                       str(forcast_date),
+                                                                       weather_data_key)
 
         context.log.info('Running query URL: {}'.format(api_query))
 
