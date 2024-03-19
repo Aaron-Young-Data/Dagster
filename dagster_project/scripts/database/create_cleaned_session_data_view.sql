@@ -35,6 +35,10 @@ dtr.TrackTempFP3 AS TrackTempFP3,
 dtr.WindDirectionFP3 AS WindDirectionFP3,
 dtr.WindSpeedFP3 AS WindSpeedFP3,
 dtr.LapTimeQ AS LapTimeQ,
+dtr.AirTempQ AS AirTempQ,
+dtr.RainfallQ AS RainfallQ,
+dtr.WindDirectionQ AS WindDirectionQ,
+dtr.WindSpeedQ AS WindSpeedQ
 (CASE
     WHEN (dtr.event_type = 'conventional') THEN 0
     ELSE 1

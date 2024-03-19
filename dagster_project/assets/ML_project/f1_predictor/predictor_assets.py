@@ -25,12 +25,17 @@ col_list = ['DriverNumber',
             'WindDirection',
             'WindSpeed']
 
+fp_col_data = {'fp1_cols': [s + 'FP1' for s in col_list[1:]],
+               'fp2_cols': [s + 'FP2' for s in col_list[1:]],
+               'fp3_cols': [s + 'FP3' for s in col_list[1:]]}
+
 data_loc = os.getenv('DATA_STORE_LOC')
 user = os.getenv('SQL_USER')
 password = os.getenv('SQL_PASSWORD')
 database = os.getenv('DATABASE')
 port = os.getenv('SQL_PORT')
 server = os.getenv('SQL_SERVER')
+
 
 @asset(config_schema={'event_type': str, 'event_name': str, 'year': int})
 def session_info(context):
@@ -44,6 +49,8 @@ def session_info(context):
                             'event_name': event_name,
                             'year': year}
                   )
+
+
 @asset()
 def clean_data_from_sql(context):
     query = FileUtils.file_to_query('sql_clean_data')
@@ -60,6 +67,33 @@ def clean_data_from_sql(context):
         }
     )
 
+
+@asset()
+def weather_forcast_from_sql(context, session_info):
+    session_data_query = FileUtils.file_to_query('sql_sesstion_datetime')
+    session_data_query = session_data_query.replace('{event}', session_info['event_name'])
+    session_data_query = session_data_query.replace('{year}', str(session_info['year']))
+    con = MySQLDirectConnection(port, database, user, password, server)
+    session_time = con.run_query(query=session_data_query)['Session4DateUtc'].iloc[0]
+
+    context.log.info(session_time)
+
+    weather_data_query = FileUtils.file_to_query('sql_weather_forcast_data')
+
+    weather_data_query = weather_data_query.replace('{event}', session_info['event_name'])
+    weather_data_query = weather_data_query.replace('{session_date_time}', str(session_time))
+    con = MySQLDirectConnection(port, database, user, password, server)
+    df = con.run_query(query=weather_data_query)
+
+    return Output(
+        value=df.head(1),
+        metadata={
+            'num_records': len(df.head(1)),
+            'markdown': MetadataValue.md(df.head(1).to_markdown())
+        }
+    )
+
+
 @asset()
 def get_track_data_sql(context):
     query = FileUtils.file_to_query('sql_track_data')
@@ -73,6 +107,7 @@ def get_track_data_sql(context):
             'markdown': MetadataValue.md(df.head().to_markdown())
         }
     )
+
 
 @asset()
 def get_new_session_data(context, session_info: dict):
@@ -128,9 +163,6 @@ def get_new_session_data(context, session_info: dict):
 @asset()
 def clean_data(context, get_new_session_data: pd.DataFrame):
     df = get_new_session_data
-    fp_col_data = {'fp1_cols': [s + 'FP1' for s in col_list[1:]],
-                   'fp2_cols': [s + 'FP2' for s in col_list[1:]],
-                   'fp3_cols': [s + 'FP3' for s in col_list[1:]]}
 
     df.replace(to_replace={'SOFT': 1,
                            'MEDIUM': 2,
@@ -180,16 +212,50 @@ def add_track_data(context, clean_data: pd.DataFrame, session_info: dict, get_tr
 
 
 @asset()
-def create_prediction(context, add_track_data: pd.DataFrame, clean_data_from_sql: pd.DataFrame):
+def add_weather_forcast_data(context, add_track_data: pd.DataFrame, weather_forcast_from_sql: pd.DataFrame):
+    df = add_track_data
+    weather_data = weather_forcast_from_sql
+
+    for col in weather_data.columns[1:]:
+        df[col] = weather_data[col].iloc[0]
+
+    df = df[['DriverNumber'] +
+            fp_col_data['fp1_cols'] +
+            fp_col_data['fp2_cols'] +
+            fp_col_data['fp3_cols'] +
+            ['AirTempQ',
+             'RainfallQ',
+             'WindDirectionQ',
+             'WindSpeedQ',
+             'is_sprint',
+             'traction',
+             'tyre_stress',
+             'asphalt_grip',
+             'braking',
+             'asphalt_abrasion',
+             'lateral_force',
+             'track_evolution',
+             'downforce']]
+
+    return Output(value=df,
+                  metadata={
+                      'Markdown': MetadataValue.md(df.head().to_markdown()),
+                      'Rows': len(df)
+                  }
+                  )
+
+
+@asset()
+def create_prediction(context, add_weather_forcast_data: pd.DataFrame, clean_data_from_sql: pd.DataFrame):
     lr = LinearRegression()
     data = clean_data_from_sql
     y = data['LapTimeQ']
     x = data.drop('LapTimeQ', axis=1)
     lr.fit(x, y)
     predict_df = pd.DataFrame()
-    for i in range(len(add_track_data)):
+    for i in range(len(add_weather_forcast_data)):
         vals = pd.DataFrame()
-        temp = add_track_data.iloc[i].to_frame().transpose()
+        temp = add_weather_forcast_data.iloc[i].to_frame().transpose()
         idx = temp.index[0]
         predicted_time = lr.predict(temp.drop(['DriverNumber'], axis=1))
         vals['drv_no'] = temp['DriverNumber']
@@ -205,6 +271,7 @@ def create_prediction(context, add_track_data: pd.DataFrame, clean_data_from_sql
                       'Rows': len(predict_df)
                   }
                   )
+
 
 @asset()
 def create_table_img(context, create_prediction: pd.DataFrame, session_info: dict):
@@ -234,7 +301,7 @@ def create_table_img(context, create_prediction: pd.DataFrame, session_info: dic
 
 @asset()
 def send_discord(context,
-                 create_table_img : str,
+                 create_table_img: str,
                  get_new_session_data: pd.DataFrame,
                  create_prediction: pd.DataFrame,
                  add_track_data: pd.DataFrame,

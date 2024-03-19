@@ -54,7 +54,7 @@ class SQLIOManager(ConfigurableIOManager):
 
         if isinstance(obj, pd.DataFrame):
             with connect_sql(config=self._config) as con:
-                obj.to_sql(table, con=con, if_exists='append', schema=schema, index=False, chunksize=10000,)
+                obj.to_sql(table, con=con, if_exists='append', schema=schema, index=False, chunksize=10000, )
 
     def _get_cleanup_statement(self, table: str, schema: str):
         return f"truncate {schema}.{table}"
@@ -101,9 +101,9 @@ class MySQLDirectConnection:
 
         self.cursor = self.cursor_conn.cursor()
 
-
     def run_query(self, query):
         try:
+            print('Query to run: ' + query)
             df = pd.read_sql(query, self.conn)
             self.conn.close()
         except pyodbc.ProgrammingError as error:
@@ -112,6 +112,7 @@ class MySQLDirectConnection:
 
     def run_query_no_output(self, query):
         try:
+            print('Query to run: ' + query)
             self.cursor.execute(query)
             self.cursor.close()
             self.cursor_conn.close()
