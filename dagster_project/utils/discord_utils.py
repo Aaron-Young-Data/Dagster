@@ -23,3 +23,4 @@ class DiscordUtils:
             await self.client.close()
 
         self.client.run(token)
+        self.client.close()

@@ -59,6 +59,8 @@ def create_prediction_job_sensor(context):
                                                                 'year': naive.year
                                                                 }}}}
             )
+        else:
+            return SkipReason("It is not 30 mins after the session")
     elif closest_race['EventFormat'] != 'conventional':
         # get the session start time
         session_time = datetime.strptime(closest_race['Session1DateUtc'],
@@ -82,6 +84,8 @@ def create_prediction_job_sensor(context):
                                                                 'year': naive.year
                                                                 }}}}
             )
+        else:
+            return SkipReason("It is not 30 mins after the session")
 
 
 @sensor(job=evaluate_prediction_job, minimum_interval_seconds=300)
