@@ -9,4 +9,3 @@ pyodbc
 SQLAlchemy
 seaborn
 dagster-mysql
-python-weather
