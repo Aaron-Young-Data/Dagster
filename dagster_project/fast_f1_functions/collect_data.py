@@ -60,6 +60,30 @@ class GetData:
             fastest_laps = Laps(list_fastest_laps).sort_values(by='LapTime').reset_index(drop=True).dropna(how='all')
         return fastest_laps
 
+    def all_laps(self, session_data, weather_data=True):
+
+        try:
+            session_data.load(weather=weather_data)
+        except AttributeError:
+            raise Exception('session_data is not a session object')
+        except KeyError:
+            return pd.DataFrame()
+        try:
+            drivers = pd.unique(session_data.laps['Driver'])
+        except fastf1.core.DataNotLoadedError:
+            return pd.DataFrame()
+
+        df = pd.DataFrame()
+
+        for drv in session_data.drivers:
+            drv_laps = session_data.laps.pick_driver(drv).sort_values(by='Time')
+            if weather_data:
+                weather_df = session_data.weather_data
+                drv_laps = pd.merge_asof(weather_df, drv_laps, on='Time', direction='nearest')
+            df = pd.concat([df, drv_laps], ignore_index=True)
+
+        return df
+
 class CleanData:
     def __init__(self):
         fastf1.Cache.enable_cache(cache)

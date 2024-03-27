@@ -8,7 +8,12 @@ from .schedules import *
 from .sensors import *
 from .resources import sql_io_manager
 
-all_assets = [*f1_predictor_assets, *data_update_assets, *database_build_assets, *f1_predictor_evaluation_assets]
+all_assets = [*f1_predictor_assets,
+              *data_update_assets,
+              *database_build_assets,
+              *f1_predictor_evaluation_assets,
+              *data_analysis_load_assets,
+              *data_analysis_download_assets]
 
 defs = Definitions(
     assets=all_assets,
@@ -20,7 +25,9 @@ defs = Definitions(
         compound_data_load_job,
         evaluate_prediction_job,
         weekend_session_data_load_job,
-        weather_forecast_data_load_job
+        weather_forecast_data_load_job,
+        load_data_analysis_data_job,
+        download_all_session_data_job
     ],
     schedules=[update_calender_job_weekly_schedule,
                update_compound_job_weekly_schedule,

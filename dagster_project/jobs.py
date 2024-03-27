@@ -8,8 +8,9 @@ from .assets.ML_project.data_update.calender import *
 from .assets.ML_project.data_update.track_data import *
 from .assets.ML_project.data_update.compound import *
 from .assets.ML_project.data_update.weather_forcast import *
+from .assets.data_analysis.data_load.session import *
+from .assets.data_analysis.data_download.all_session_data import *
 from .partitions import daily_partitions
-
 
 create_prediction_job = define_asset_job("F1_prediction_job",
                                          selection=AssetSelection.groups(F1_PREDICTOR),
@@ -73,8 +74,30 @@ compound_data_load_job = define_asset_job('load_compound_data_job',
                                           description='Job to load the compound data into MySQL (dim_compound)')
 
 weather_forecast_data_load_job = define_asset_job('load_weather_forcast_data_job',
-                                         selection=AssetSelection.assets(get_calender_locations_sql,
-                                                                         get_weather_forcast_data,
-                                                                         weather_forcast_to_sql),
-                                         description='Job to upload the weather forcast',
-                                         partitions_def=daily_partitions)
+                                                  selection=AssetSelection.assets(get_calender_locations_sql,
+                                                                                  get_weather_forcast_data,
+                                                                                  weather_forcast_to_sql),
+                                                  description='Job to upload the weather forcast',
+                                                  partitions_def=daily_partitions)
+
+load_data_analysis_data_job = define_asset_job('load_data_analysis_data_job',
+                                               selection=AssetSelection.assets(get_data_analysis_session_data,
+                                                                               data_analysis_session_data_to_sql),
+                                               description='Job to load the session data into MySql '
+                                                           '(tableau_data.all_session_data)',
+                                               config={'ops':
+                                                           {'get_data_analysis_session_data':
+                                                                {"config":
+                                                                     {'year_list': [2018,
+                                                                                    2019,
+                                                                                    2020,
+                                                                                    2021,
+                                                                                    2022,
+                                                                                    2023,
+                                                                                    2024]
+                                                                      }}}})
+
+download_all_session_data_job = define_asset_job('download_all_session_data_job',
+                                                 selection=AssetSelection.assets(all_session_data_from_sql,
+                                                                                 all_session_data_to_csv),
+                                                 description='Job to download all of the session data')
