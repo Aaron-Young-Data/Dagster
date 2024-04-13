@@ -13,7 +13,8 @@ all_assets = [*f1_predictor_assets,
               *database_build_assets,
               *f1_predictor_evaluation_assets,
               *data_analysis_load_assets,
-              *data_analysis_download_assets]
+              *data_analysis_download_assets,
+              *data_analysis_database_build]
 
 defs = Definitions(
     assets=all_assets,
@@ -27,12 +28,14 @@ defs = Definitions(
         weekend_session_data_load_job,
         weather_forecast_data_load_job,
         load_data_analysis_data_job,
-        download_all_session_data_job
+        download_all_session_data_job,
+        load_track_status_data_job
     ],
     schedules=[update_calender_job_weekly_schedule,
                update_compound_job_weekly_schedule,
                update_track_job_weekly_schedule,
-               weather_forcast_schedule],
+               weather_forcast_schedule,
+               update_track_status_data_job_weekly_schedule],
     sensors=[create_prediction_job_sensor,
              evaluate_prediction_job_sensor,
              weekend_session_data_load_job_sensor,

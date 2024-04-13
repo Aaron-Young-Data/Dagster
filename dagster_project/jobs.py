@@ -10,6 +10,7 @@ from .assets.ML_project.data_update.compound import *
 from .assets.ML_project.data_update.weather_forcast import *
 from .assets.data_analysis.data_load.session import *
 from .assets.data_analysis.data_download.all_session_data import *
+from .assets.data_analysis.data_load.track_status import *
 from .partitions import daily_partitions
 
 create_prediction_job = define_asset_job("F1_prediction_job",
@@ -101,3 +102,8 @@ download_all_session_data_job = define_asset_job('download_all_session_data_job'
                                                  selection=AssetSelection.assets(all_session_data_from_sql,
                                                                                  all_session_data_to_csv),
                                                  description='Job to download all of the session data')
+
+load_track_status_data_job = define_asset_job('load_track_status_data_job',
+                                              selection=AssetSelection.assets(get_track_status_data_csv,
+                                                                              track_status_data_to_sql),
+                                              description='Job to load the dim track status table')

@@ -1,6 +1,6 @@
 from dagster import load_assets_from_package_module, load_assets_from_modules
-from . ML_project import f1_predictor, data_update, datebase_build, predictor_evaluation
-from . data_analysis import data_load, data_download
+from .ML_project import f1_predictor, data_update, datebase_build, predictor_evaluation
+from .data_analysis import data_load, data_download, database_build_analyitcs
 
 F1_PREDICTOR = "ML_project"
 f1_predictor_assets = load_assets_from_package_module(package_module=f1_predictor, group_name=F1_PREDICTOR)
@@ -21,3 +21,7 @@ data_analysis_load_assets = load_assets_from_package_module(package_module=data_
 DATA_ANALYSIS_DATA_DOWNLOAD = "data_analysis_download"
 data_analysis_download_assets = load_assets_from_package_module(package_module=data_download,
                                                                 group_name=DATA_ANALYSIS_DATA_DOWNLOAD)
+
+DATA_ANALYSIS_DATABASE_BUILD = "data_analysis_database_build"
+data_analysis_database_build = load_assets_from_package_module(package_module=database_build_analyitcs,
+                                                               group_name=DATA_ANALYSIS_DATABASE_BUILD)

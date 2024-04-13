@@ -23,6 +23,11 @@ def update_compound_job_weekly_schedule(context: ScheduleEvaluationContext):
 def update_track_job_weekly_schedule(context: ScheduleEvaluationContext):
     return RunRequest()
 
+@schedule(job=load_track_status_data_job,
+          cron_schedule="0 12 * * 4",
+          execution_timezone="GMT")
+def update_track_status_data_job_weekly_schedule(context: ScheduleEvaluationContext):
+    return RunRequest()
 
 weather_forcast_schedule = build_schedule_from_partitioned_job(
     job=weather_forecast_data_load_job,
