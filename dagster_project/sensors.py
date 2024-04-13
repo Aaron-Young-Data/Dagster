@@ -198,7 +198,7 @@ def weekend_session_data_load_job_sensor(context):
 def session_data_load_job_sensor(context):
     today = date.today()
     year = today.year
-    year_list = list(range(2018, year+1))
+    year_list = list(range(2018, year + 1))
     run_records = context.instance.get_run_records(
         RunsFilter(job_name="session_data_load_job", statuses=[DagsterRunStatus.STARTED])
     )
@@ -223,7 +223,7 @@ def session_data_load_job_sensor(context):
 def analytics_session_data_load_job_sensor(context):
     today = date.today()
     year = today.year
-    year_list = list(range(2018, year+1))
+    year_list = list(range(2018, year + 1))
     run_records = context.instance.get_run_records(
         RunsFilter(job_name="load_data_analysis_data_job", statuses=[DagsterRunStatus.STARTED])
     )
@@ -235,8 +235,8 @@ def analytics_session_data_load_job_sensor(context):
         if row_count == 0:
             return RunRequest(
                 job_name='load_data_analysis_data_job',
-                run_config={'ops': {'get_session_data': {"config": {'year_list': year_list
-                                                                    }}}})
+                run_config={'ops': {'get_data_analysis_session_data': {"config": {'year_list': year_list
+                                                                                  }}}})
 
         else:
             return SkipReason(f'Current row count: {int(row_count)}')
@@ -268,4 +268,3 @@ def analytics_session_data_download_job_sensor(context):
             return SkipReason(f'Current row count: {int(row_count)}')
     else:
         return SkipReason('Job is already running!')
-
