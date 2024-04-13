@@ -51,6 +51,7 @@ def get_data_analysis_session_data(context):
                                         'Team',
                                         'LapTime',
                                         'LapNumber',
+                                        'Position',
                                         'Stint',
                                         'TyreLife',
                                         'FreshTyre',
