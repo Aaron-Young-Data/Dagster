@@ -39,7 +39,9 @@ defs = Definitions(
     sensors=[create_prediction_job_sensor,
              evaluate_prediction_job_sensor,
              weekend_session_data_load_job_sensor,
-             session_data_load_job_sensor],
+             session_data_load_job_sensor,
+             analytics_session_data_load_job_sensor,
+             analytics_session_data_download_job_sensor],
     resources={
         'sql_io_manager': sql_io_manager.SQLIOManager(
             user=os.getenv('SQL_USER'),

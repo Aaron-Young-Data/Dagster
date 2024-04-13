@@ -13,6 +13,7 @@ password = os.getenv('SQL_PASSWORD')
 database = os.getenv('DATABASE')
 port = os.getenv('SQL_PORT')
 server = os.getenv('SQL_SERVER')
+tableau_data_loc = os.getenv('TABLEAU_DATA_LOC')
 
 
 @sensor(job=create_prediction_job, minimum_interval_seconds=300)
@@ -216,3 +217,51 @@ def session_data_load_job_sensor(context):
             return SkipReason(f'Current row count: {int(row_count)}')
     else:
         return SkipReason('Job is already running!')
+
+
+@sensor(job=load_data_analysis_data_job, minimum_interval_seconds=300)
+def analytics_session_data_load_job_sensor(context):
+    today = date.today()
+    year = today.year
+    year_list = list(range(2018, year+1))
+    run_records = context.instance.get_run_records(
+        RunsFilter(job_name="load_data_analysis_data_job", statuses=[DagsterRunStatus.STARTED])
+    )
+    if len(run_records) == 0:
+        query = FileUtils.file_to_query('analytics_session_data_sensor')
+        con = MySQLDirectConnection(port, database, user, password, server)
+        df = con.run_query(query=query)
+        row_count = int(df['RowCount'])
+        if row_count == 0:
+            return RunRequest(
+                job_name='session_data_load_job',
+                run_config={'ops': {'get_session_data': {"config": {'year_list': year_list
+                                                                    }}}})
+
+        else:
+            return SkipReason(f'Current row count: {int(row_count)}')
+    else:
+        return SkipReason('Job is already running!')
+
+
+@sensor(job=download_all_session_data_job, minimum_interval_seconds=300)
+def analytics_session_data_download_job_sensor(context):
+    run_records = context.instance.get_run_records(
+        RunsFilter(job_name="load_data_analysis_data_job", statuses=[DagsterRunStatus.STARTED])
+    )
+    if len(run_records) == 0:
+        download_file = pd.read_csv(tableau_data_loc + 'Lap_Data.csv')
+        file_length = len(download_file)
+        query = FileUtils.file_to_query('analytics_session_data_download_sensor')
+        con = MySQLDirectConnection(port, database, user, password, server)
+        df = con.run_query(query=query)
+        row_count = int(df['RowCount'])
+        if row_count != file_length:
+            return RunRequest(
+                job_name='download_all_session_data_job')
+
+        else:
+            return SkipReason(f'Current row count: {int(row_count)}')
+    else:
+        return SkipReason('Job is already running!')
+
