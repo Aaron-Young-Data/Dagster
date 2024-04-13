@@ -234,7 +234,7 @@ def analytics_session_data_load_job_sensor(context):
         row_count = int(df['RowCount'])
         if row_count == 0:
             return RunRequest(
-                job_name='session_data_load_job',
+                job_name='load_data_analysis_data_job',
                 run_config={'ops': {'get_session_data': {"config": {'year_list': year_list
                                                                     }}}})
 
