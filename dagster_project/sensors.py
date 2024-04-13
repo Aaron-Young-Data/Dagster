@@ -250,7 +250,11 @@ def analytics_session_data_download_job_sensor(context):
         RunsFilter(job_name="load_data_analysis_data_job", statuses=[DagsterRunStatus.STARTED])
     )
     if len(run_records) == 0:
-        download_file = pd.read_csv(tableau_data_loc + 'Lap_Data.csv')
+        try:
+            download_file = pd.read_csv(tableau_data_loc + 'Lap_Data.csv')
+        except FileNotFoundError:
+            return RunRequest(
+                job_name='download_all_session_data_job')
         file_length = len(download_file)
         query = FileUtils.file_to_query('analytics_session_data_download_sensor')
         con = MySQLDirectConnection(port, database, user, password, server)
