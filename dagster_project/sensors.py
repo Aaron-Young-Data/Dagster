@@ -292,7 +292,7 @@ def analytics_weekend_session_data_load_job_sensor(context):
 
     # check if it is qualifying day
     if race_dt != date.today():
-        return SkipReason(f'Qualifying is not today! Next qualifying session dt: {race_dt}')
+        return SkipReason(f'The race is not today! The next rase session dt: {race_dt}')
 
     # get the session start time
     session_time = datetime.strptime(closest_race['Session5DateUtc'],
