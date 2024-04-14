@@ -8,7 +8,7 @@ from .assets.ML_project.data_update.calender import *
 from .assets.ML_project.data_update.track_data import *
 from .assets.ML_project.data_update.compound import *
 from .assets.ML_project.data_update.weather_forcast import *
-from .assets.data_analysis.data_load.session import *
+from .assets.data_analysis.data_load.all_sessions import *
 from .assets.data_analysis.data_download.all_session_data import *
 from .assets.data_analysis.data_load.track_status import *
 from .partitions import daily_partitions
@@ -98,12 +98,26 @@ load_data_analysis_data_job = define_asset_job('load_data_analysis_data_job',
                                                                                     2024]
                                                                       }}}})
 
-download_all_session_data_job = define_asset_job('download_all_session_data_job',
-                                                 selection=AssetSelection.assets(all_session_data_from_sql,
-                                                                                 all_session_data_to_csv),
-                                                 description='Job to download all of the session data')
+download_all_session_data_job_analytics = define_asset_job('download_all_session_data_job_analytics',
+                                                           selection=AssetSelection.assets(all_session_data_from_sql,
+                                                                                           all_session_data_to_csv),
+                                                           description='Job to download all of the session data')
 
-load_track_status_data_job = define_asset_job('load_track_status_data_job',
-                                              selection=AssetSelection.assets(get_track_status_data_csv,
-                                                                              track_status_data_to_sql),
-                                              description='Job to load the dim track status table')
+load_track_status_data_job_analytics = define_asset_job('load_track_status_data_job_analytics',
+                                                        selection=AssetSelection.assets(get_track_status_data_csv,
+                                                                                        track_status_data_to_sql),
+                                                        description='Job to load the dim track status table')
+
+load_weekend_session_data_analytics = define_asset_job('load_weekend_session_data_analytics',
+                                                       selection=AssetSelection.assets(
+                                                           get_data_analysis_weekend_session_data,
+                                                           data_analysis_weekend_session_data_to_sql),
+                                                       description='Job to load the weekend data into MySql '
+                                                                   '(tableau_data.all_session_data)',
+                                                       config={'ops':
+                                                                   {'get_data_analysis_weekend_session_data':
+                                                                        {"config":
+                                                                             {'event_type': 'conventional',
+                                                                              'event_name': 'Abu Dhabi Grand Prix',
+                                                                              'year': 2023
+                                                                              }}}})

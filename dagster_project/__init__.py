@@ -28,8 +28,9 @@ defs = Definitions(
         weekend_session_data_load_job,
         weather_forecast_data_load_job,
         load_data_analysis_data_job,
-        download_all_session_data_job,
-        load_track_status_data_job
+        download_all_session_data_job_analytics,
+        load_track_status_data_job_analytics,
+        load_weekend_session_data_analytics
     ],
     schedules=[update_calender_job_weekly_schedule,
                update_compound_job_weekly_schedule,
@@ -41,7 +42,8 @@ defs = Definitions(
              weekend_session_data_load_job_sensor,
              session_data_load_job_sensor,
              analytics_session_data_load_job_sensor,
-             analytics_session_data_download_job_sensor],
+             analytics_session_data_download_job_sensor,
+             analytics_weekend_session_data_load_job_sensor],
     resources={
         'sql_io_manager': sql_io_manager.SQLIOManager(
             user=os.getenv('SQL_USER'),
