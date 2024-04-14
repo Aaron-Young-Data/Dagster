@@ -31,5 +31,6 @@ IsAccurate BOOL,
 Session VARCHAR(25),
 event_name VARCHAR(50),
 year INT,
-event_type VARCHAR(25)
+event_type VARCHAR(25),
+load_timestamp TIMESTAMP
 )

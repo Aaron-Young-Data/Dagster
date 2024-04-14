@@ -1,10 +1,8 @@
 import os
 import pandas as pd
-from dagster import asset, Output, MetadataValue, multi_asset, AssetOut
+from dagster import asset, Output, MetadataValue
 from dagster_project.fast_f1_functions.collect_data import GetData, CleanData
-from dagster_project.resources.sql_io_manager import MySQLDirectConnection
-from dagster_project.utils.file_utils import FileUtils
-from datetime import date
+from datetime import date, datetime
 
 data = GetData()
 clean = CleanData()
@@ -103,6 +101,95 @@ def get_data_analysis_session_data(context):
 @asset(io_manager_key='sql_io_manager', key_prefix=['tableau_data', 'all_session_data', 'cleanup'])
 def data_analysis_session_data_to_sql(context, get_data_analysis_session_data: pd.DataFrame):
     df = get_data_analysis_session_data
+    df['load_timestamp'] = datetime.today()
+    return Output(
+        value=df,
+        metadata={
+            'Markdown': MetadataValue.md(df.head().to_markdown()),
+            'Rows': len(df)
+        }
+
+    )
+
+
+@asset(config_schema={'event_type': str, 'event_name': str, 'year': int})
+def get_data_analysis_weekend_session_data(context):
+    event_type = context.op_config['event_type']
+    event_name = context.op_config['event_name']
+    year = context.op_config['year']
+
+    calendar = pd.read_csv(f"{data_loc}calender.csv")
+
+    context.log.info(f'Currently getting event: {event_name} - {year}')
+    all_sessions = data.session_list(calendar[calendar['EventName'] == event_name][['Session1',
+                                                                                    'Session2',
+                                                                                    'Session3',
+                                                                                    'Session4',
+                                                                                    'Session5']])
+    event_data = pd.DataFrame()
+    for session in all_sessions:
+        session_data = data.session_data(year=year, location=event_name, session=session)
+        all_laps = data.all_laps(session_data=session_data)
+        if len(all_laps) == 0:
+            break
+
+        needed_data = all_laps[['Driver',
+                                'DriverNumber',
+                                'Team',
+                                'LapTime',
+                                'LapNumber',
+                                'Position',
+                                'Stint',
+                                'TyreLife',
+                                'FreshTyre',
+                                'Sector1Time',
+                                'Sector2Time',
+                                'Sector3Time',
+                                'SpeedI1',
+                                'SpeedI2',
+                                'SpeedFL',
+                                'SpeedST',
+                                'IsPersonalBest',
+                                'Compound',
+                                'Deleted',
+                                'DeletedReason',
+                                'AirTemp',
+                                'Rainfall',
+                                'TrackTemp',
+                                'WindDirection',
+                                'WindSpeed',
+                                'TrackStatus',
+                                'IsAccurate']]
+
+        session_df = clean.time_cols_to_seconds(column_names=['LapTime',
+                                                              'Sector1Time',
+                                                              'Sector2Time',
+                                                              'Sector3Time'],
+                                                dataframe=needed_data)
+
+        session_df['session'] = session
+
+        if event_data.empty:
+            event_data = session_df
+        else:
+            event_data = pd.concat([event_data, session_df], ignore_index=True)
+    event_data['event_name'] = event_name
+    event_data['year'] = year
+    event_data['event_type'] = event_type
+    return Output(
+        value=event_data,
+        metadata={
+            'Markdown': MetadataValue.md(event_data.head().to_markdown()),
+            'Rows': len(event_data)
+        }
+
+    )
+
+
+@asset(io_manager_key='sql_io_manager', key_prefix=['tableau_data', 'all_session_data', 'append'])
+def data_analysis_weekend_session_data_to_sql(context, get_data_analysis_weekend_session_data: pd.DataFrame):
+    df = get_data_analysis_weekend_session_data
+    df['load_timestamp'] = datetime.today()
     return Output(
         value=df,
         metadata={
