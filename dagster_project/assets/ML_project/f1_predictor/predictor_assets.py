@@ -70,15 +70,16 @@ def clean_data_from_sql(context):
 
 @asset()
 def weather_forcast_from_sql(context, session_info):
-    session_data_query = FileUtils.file_to_query('sql_sesstion_datetime')
+    session_data_query = FileUtils.file_to_query('sql_session_datetime')
     session_data_query = session_data_query.replace('{event}', session_info['event_name'])
     session_data_query = session_data_query.replace('{year}', str(session_info['year']))
     con = MySQLDirectConnection(port, database, user, password, server)
-    session_type = con.run_query(query=session_data_query)['EventFormat'].iloc[0]
+    session = con.run_query(query=session_data_query)
+    session_type = session['EventFormat'].iloc[0]
     if session_type == 'conventional':
-        session_time = con.run_query(query=session_data_query)['Session4DateUtc'].iloc[0]
+        session_time = session['Session4DateUtc'].iloc[0]
     else:
-        session_time = con.run_query(query=session_data_query)['Session2DateUtc'].iloc[0]
+        session_time = session['Session2DateUtc'].iloc[0]
 
     context.log.info(session_time)
 
