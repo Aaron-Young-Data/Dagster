@@ -74,7 +74,11 @@ def weather_forcast_from_sql(context, session_info):
     session_data_query = session_data_query.replace('{event}', session_info['event_name'])
     session_data_query = session_data_query.replace('{year}', str(session_info['year']))
     con = MySQLDirectConnection(port, database, user, password, server)
-    session_time = con.run_query(query=session_data_query)['Session4DateUtc'].iloc[0]
+    session_type = con.run_query(query=session_data_query)['EventFormat'].iloc[0]
+    if session_type == 'conventional':
+        session_time = con.run_query(query=session_data_query)['Session4DateUtc'].iloc[0]
+    else:
+        session_time = con.run_query(query=session_data_query)['Session2DateUtc'].iloc[0]
 
     context.log.info(session_time)
 
@@ -82,6 +86,7 @@ def weather_forcast_from_sql(context, session_info):
 
     weather_data_query = weather_data_query.replace('{event}', session_info['event_name'])
     weather_data_query = weather_data_query.replace('{session_date_time}', str(session_time))
+    context.log.info(f'Query to run: \n{weather_data_query}')
     con = MySQLDirectConnection(port, database, user, password, server)
     df = con.run_query(query=weather_data_query)
 
