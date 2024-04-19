@@ -1,4 +1,5 @@
 Select
+EventFormat,
 Session4DateUtc
 FROM
 f1_calender
