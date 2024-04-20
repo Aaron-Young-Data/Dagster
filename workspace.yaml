@@ -1,3 +1,13 @@
 load_from:
   - python_package:
-      package_name: dagster_project
+      package_name: data_analytics
+      working_directory: dagster_project/
+  - python_package:
+      package_name: f1_predictor_data
+      working_directory: dagster_project/
+  - python_package:
+      package_name: f1_predictor
+      working_directory: dagster_project/
+  - python_package:
+      package_name: database_build
+      working_directory: dagster_project/
