@@ -11,3 +11,6 @@ load_from:
   - python_package:
       package_name: database_build
       working_directory: dagster_project/
+  - python_package:
+      package_name: core
+      working_directory: dagster_project/
