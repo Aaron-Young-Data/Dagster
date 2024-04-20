@@ -27,5 +27,6 @@ tableau_data_loc = os.getenv('TABLEAU_DATA_LOC')
 def discord_failure_sensor(context: RunFailureSensorContext):
     dis = DiscordUtils()
     dis.send_message(message=f'Job: {context.dagster_run.job_name} failed!\n'
-                             f'Error: {context.failure_event.message}',
+                             f'Error: {context.failure_event.message}\n'
+                             f'Good thing there is no SLA!',
                      channel_id='1231256334511636521')
