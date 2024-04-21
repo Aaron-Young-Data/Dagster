@@ -121,11 +121,12 @@ def get_data_analysis_weekend_session_data(context):
     calendar = pd.read_csv(f"{data_loc}calender.csv")
 
     context.log.info(f'Currently getting event: {event_name} - {year}')
-    all_sessions = data.session_list(calendar[calendar['EventName'] == event_name][['Session1',
-                                                                                    'Session2',
-                                                                                    'Session3',
-                                                                                    'Session4',
-                                                                                    'Session5']])
+    all_sessions = data.session_list(calendar[(calendar['EventName'] == event_name) &
+                                              (pd.to_datetime(calendar['EventDate']).dt.year == year)][['Session1',
+                                                                                                        'Session2',
+                                                                                                        'Session3',
+                                                                                                        'Session4',
+                                                                                                        'Session5']])
     event_data = pd.DataFrame()
     for session in all_sessions:
         session_data = data.session_data(year=year, location=event_name, session=session)
