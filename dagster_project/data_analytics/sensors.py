@@ -57,7 +57,7 @@ def weekend_session_data_load_job_sensor(context):
     utc_dt = local_dt.astimezone(pytz.utc)
 
     # this find the closes race in the calendar
-    closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
+    closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date >= utc_dt.date()].iloc[0]
 
     # get the next race section date
     race_dt = pd.to_datetime(closest_race['Session5DateUtc']).date()
@@ -71,7 +71,7 @@ def weekend_session_data_load_job_sensor(context):
                                      '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.utc)
 
     # add 1.5 hours to the session start time 1 hour for the session 30 mins for the data to be available
-    session_time_modified = (session_time + timedelta(hours=1.5)).replace(tzinfo=pytz.utc)
+    session_time_modified = (session_time + timedelta(hours=2)).replace(tzinfo=pytz.utc)
 
     # check if we are after the needed session + 30 mins
     if session_time_modified < utc_dt:
