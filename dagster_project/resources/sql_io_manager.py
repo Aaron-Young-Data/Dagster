@@ -59,6 +59,28 @@ class SQLIOManager(ConfigurableIOManager):
     def _get_cleanup_statement(self, table: str, schema: str):
         return f"truncate {schema}.{table}"
 
+    def load_input(self, context: InputContext) -> PandasDataFrame:
+        schema, table, query = context.asset_key.path[0], context.asset_key.path[-3], context.asset_key.path[-2]
+
+        with connect_sql(config=self._config) as con:
+            result = read_sql(
+                sql=self._get_select_statement(
+                    table,
+                    schema,
+                    (context.metadata or {}).get('columns'),
+                ),
+                con=con
+            )
+        result.columns = map(str.lower, result.columns)
+        return result
+
+    def _get_select_statement(self,
+                              table: str,
+                              schema: str,
+                              columns: Optional[Sequence[str]]
+                              ):
+        col_list = ', '.join(columns) if columns else '*'
+        return f'SELECT {col_list} FROM {schema}.{table}'
 
 class MySQLDirectConnection:
     def __init__(self, port, database, user, password, server):

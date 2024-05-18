@@ -15,15 +15,10 @@ get_data = GetData()
 clean = CleanData()
 col_list = ['DriverNumber',
             'LapTime',
-            'Sector1Time',
-            'Sector2Time',
-            'Sector3Time',
             'Compound',
             'AirTemp',
             'Rainfall',
-            'TrackTemp',
-            'WindDirection',
-            'WindSpeed']
+            'TrackTemp']
 
 fp_col_data = {'fp1_cols': [s + 'FP1' for s in col_list[1:]],
                'fp2_cols': [s + 'FP2' for s in col_list[1:]],
@@ -134,10 +129,7 @@ def get_new_session_data(context, session_info: dict):
                                              session=session)
         fastest_laps = get_data.fastest_laps(session_data=session_data)
         needed_data = fastest_laps[col_list]
-        session_df = clean.time_cols_to_seconds(column_names=['LapTime',
-                                                              'Sector1Time',
-                                                              'Sector2Time',
-                                                              'Sector3Time'],
+        session_df = clean.time_cols_to_seconds(column_names=['LapTime'],
                                                 dataframe=needed_data)
 
         session_df = session_df.add_suffix(session)
@@ -231,8 +223,6 @@ def add_weather_forcast_data(context, add_track_data: pd.DataFrame, weather_forc
             fp_col_data['fp3_cols'] +
             ['AirTempQ',
              'RainfallQ',
-             'WindDirectionQ',
-             'WindSpeedQ',
              'is_sprint',
              'traction',
              'tyre_stress',
