@@ -49,7 +49,6 @@ def session_info(context):
 @asset()
 def clean_data_from_sql(context):
     query = FileUtils.file_to_query('sql_clean_data')
-    query = query.replace('{year_number}', str(datetime.date.today().year))
     context.log.info(f'Query to run: \n{query}')
     con = MySQLDirectConnection(port, database, user, password, server)
     df = con.run_query(query=query)

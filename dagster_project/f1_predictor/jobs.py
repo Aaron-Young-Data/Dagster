@@ -26,3 +26,7 @@ evaluate_prediction_job = define_asset_job('evaluation_prediction_job',
                                                                  {'event_name': 'Abu Dhabi Grand Prix',
                                                                   'year': 2023
                                                                   }}}})
+create_dnn_model_job = define_asset_job('create_dnn_model_job',
+                                        selection=AssetSelection.groups(F1_DNN_MODEL_CREATE),
+                                        description='Job to create an updated DNN model when new data is available and'
+                                                    'outputs new model evaluation to discord')

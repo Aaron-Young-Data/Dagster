@@ -6,6 +6,8 @@ import pytz
 import fastf1
 import os
 from resources.sql_io_manager import MySQLDirectConnection
+from utils.discord_utils import DiscordUtils
+
 
 data_loc = os.getenv('DATA_STORE_LOC')
 user = os.getenv('SQL_USER')
@@ -139,3 +141,51 @@ def evaluate_prediction_job_sensor(context):
         )
     else:
         return SkipReason("It is not 30 mins after the session")
+
+@sensor(job=create_dnn_model_job, minimum_interval_seconds=30)
+def create_dnn_model_discord_sensor(context):
+    run_records = context.instance.get_run_records(
+        RunsFilter(job_name="create_dnn_model_job", statuses=[DagsterRunStatus.STARTED])
+    )
+    if len(run_records) == 0:
+        dis = DiscordUtils()
+        message = dis.check_for_message(
+            message_content='rerun'
+        )
+        if message is not None:
+            dis = DiscordUtils()
+            dis.send_message(message=f'New run of create_dnn_model_job has been launched!')
+            return RunRequest()
+        else:
+            return SkipReason('No message was found not starting run')
+    else:
+        return SkipReason('Job is already running!')
+
+@sensor(job=create_dnn_model_job, minimum_interval_seconds=300)
+def create_dnn_model_sensor(context):
+
+    monitored_jobs = [
+        "weekend_session_data_load_job"
+    ]
+
+    last_cursor = context.cursor or "0"
+    last_timestamp = datetime.fromtimestamp(float(last_cursor))
+
+    for job_name in monitored_jobs:
+        run_records = context.instance.get_run_records(
+            filters=RunsFilter(
+                job_name="weekend_session_data_load_job",
+                statuses=[DagsterRunStatus.SUCCESS],
+                updated_after=last_timestamp
+            ),
+            order_by="update_timestamp",
+            ascending=False,
+        )
+
+        if not run_records:
+            return SkipReason(
+                f"Job {job_name} has not completed successfully since {last_timestamp}"
+            )
+
+    context.update_cursor(str(datetime.utcnow().timestamp()))
+    return RunRequest()
