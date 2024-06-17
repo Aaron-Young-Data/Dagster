@@ -142,24 +142,6 @@ def evaluate_prediction_job_sensor(context):
     else:
         return SkipReason("It is not 30 mins after the session")
 
-@sensor(job=create_dnn_model_job, minimum_interval_seconds=30)
-def create_dnn_model_discord_sensor(context):
-    run_records = context.instance.get_run_records(
-        RunsFilter(job_name="create_dnn_model_job", statuses=[DagsterRunStatus.STARTED])
-    )
-    if len(run_records) == 0:
-        dis = DiscordUtils()
-        message = dis.check_for_message(
-            message_content='rerun'
-        )
-        if message is not None:
-            dis = DiscordUtils()
-            dis.send_message(message=f'New run of create_dnn_model_job has been launched!')
-            return RunRequest()
-        else:
-            return SkipReason('No message was found not starting run')
-    else:
-        return SkipReason('Job is already running!')
 
 @sensor(job=create_dnn_model_job, minimum_interval_seconds=300)
 def create_dnn_model_sensor(context):

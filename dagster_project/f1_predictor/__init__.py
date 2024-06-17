@@ -22,7 +22,6 @@ defs = Definitions(
     schedules=[],
     sensors=[create_prediction_job_sensor,
              evaluate_prediction_job_sensor,
-             create_dnn_model_discord_sensor,
              create_dnn_model_sensor],
     resources={
         'sql_io_manager': sql_io_manager.SQLIOManager(
