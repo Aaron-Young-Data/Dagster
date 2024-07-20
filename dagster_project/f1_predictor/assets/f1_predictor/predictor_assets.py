@@ -197,7 +197,7 @@ def clean_data(context, get_new_session_data: pd.DataFrame):
 def add_track_data(context, clean_data: pd.DataFrame, session_info: dict, get_track_data_sql: pd.DataFrame):
     event_name = session_info['event_name']
     track_df = get_track_data_sql
-    track_info = track_df[track_df['event_name'] == event_name]
+    track_info = track_df[track_df['EVENT_NAME'] == event_name]
     for col in track_info.columns[1:]:
         clean_data[col] = track_info[col].iloc[0]
     return Output(value=clean_data,
@@ -232,6 +232,36 @@ def add_weather_forcast_data(context, add_track_data: pd.DataFrame, weather_forc
              'track_evolution',
              'downforce']]
 
+    df = df.rename(columns={
+        'DriverNumber': 'DRIVER_NUMBER',
+        'LapTimeFP1': 'LAPTIME_FP1',
+        'CompoundFP1': 'COMPOUND_FP1',
+        'AirTempFP1': 'AIR_TEMP_FP1',
+        'RainfallFP1': 'RAINFALL_FP1',
+        'TrackTempFP1': 'TRACK_TEMP_FP1',
+        'LapTimeFP2': 'LAPTIME_FP2',
+        'CompoundFP2': 'COMPOUND_FP2',
+        'AirTempFP2': 'AIR_TEMP_FP2',
+        'RainfallFP2': 'RAINFALL_FP2',
+        'TrackTempFP2': 'TRACK_TEMP_FP2',
+        'LapTimeFP3': 'LAPTIME_FP3',
+        'CompoundFP3': 'COMPOUND_FP3',
+        'AirTempFP3': 'AIR_TEMP_FP3',
+        'RainfallFP3': 'RAINFALL_FP3',
+        'TrackTempFP3': 'TRACK_TEMP_FP3',
+        'AirTempQ': 'AIR_TEMP_Q',
+        'RainfallQ': 'RAINFALL_Q',
+        'is_sprint': 'IS_SPRINT',
+        'traction': 'TRACTION',
+        'tyre_stress': 'TYRE_STRESS',
+        'asphalt_grip': 'ASPHALT_GRIP',
+        'braking': 'BRAKING',
+        'asphalt_abrasion': 'ASPHALT_ABRASION',
+        'lateral_force': 'LATERAL_FORCE',
+        'track_evolution': 'TRACK_EVOLUTION',
+        'downforce': 'DOWNFORCE'
+    })
+
     return Output(value=df,
                   metadata={
                       'Markdown': MetadataValue.md(df.head().to_markdown()),
@@ -244,16 +274,16 @@ def add_weather_forcast_data(context, add_track_data: pd.DataFrame, weather_forc
 def create_prediction(context, add_weather_forcast_data: pd.DataFrame, clean_data_from_sql: pd.DataFrame):
     lr = LinearRegression()
     data = clean_data_from_sql
-    y = data['LapTimeQ']
-    x = data.drop('LapTimeQ', axis=1)
+    y = data['LAPTIME_Q']
+    x = data.drop('LAPTIME_Q', axis=1)
     lr.fit(x, y)
     predict_df = pd.DataFrame()
     for i in range(len(add_weather_forcast_data)):
         vals = pd.DataFrame()
         temp = add_weather_forcast_data.iloc[i].to_frame().transpose()
         idx = temp.index[0]
-        predicted_time = lr.predict(temp.drop(['DriverNumber'], axis=1))
-        vals['drv_no'] = temp['DriverNumber']
+        predicted_time = lr.predict(temp.drop(['DRIVER_NUMBER'], axis=1))
+        vals['drv_no'] = temp['DRIVER_NUMBER']
         vals['predicted_time'] = predicted_time
         predict_df = pd.concat([predict_df, vals])
 
