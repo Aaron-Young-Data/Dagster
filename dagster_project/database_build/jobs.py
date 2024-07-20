@@ -10,7 +10,6 @@ from .assets.f1_predictor.raw_session_data import *
 from .assets.f1_predictor.f1_calender import *
 from .assets.f1_predictor.dim_event import *
 from .assets.f1_predictor.dim_compound import *
-from .assets.f1_predictor.cleaned_session_data import *
 from .assets.data_analytics.create_analytics_all_session_data import *
 from .assets.data_analytics.create_dim_track_status import *
 from .partitions import daily_partitions
@@ -42,10 +41,6 @@ create_dim_event_view_job = define_asset_job("create_dim_event_view_job",
 create_dim_compound_table_job = define_asset_job("create_dim_compound_table_job",
                                                  selection=AssetSelection.assets(create_dim_compound),
                                                  description="Create dim compound table")
-
-create_cleaned_session_data_view_job = define_asset_job("create_cleaned_session_data_view_job",
-                                                        selection=AssetSelection.assets(create_cleaned_session_data),
-                                                        description="Create cleaned session data view")
 
 create_all_session_data_job_analytics = define_asset_job("create_all_session_data_job_analytics",
                                                          selection=AssetSelection.assets(

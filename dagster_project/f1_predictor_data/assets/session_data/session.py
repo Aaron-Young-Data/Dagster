@@ -88,7 +88,7 @@ def get_session_data(context):
                     session_df = session_df.rename(columns={f'Driver{suffix}': 'Driver'})
                     event_data = pd.merge(event_data, session_df, on=['DriverNumber', 'Driver', 'Team'], how="outer")
 
-            event_data['event_cd'] = str(races_df[races_df['EventName'] == race]['RoundNumber'].iloc[0]) + str(year)
+            event_data['EVENT_CD'] =  str(year) + str(races_df[races_df['EventName'] == race]['RoundNumber'].iloc[0])
             full_data = pd.concat([full_data, event_data])
     return Output(
         value=full_data,
@@ -102,7 +102,51 @@ def get_session_data(context):
 
 @asset(io_manager_key='sql_io_manager', key_prefix=[database, 'raw_session_data', 'cleanup'])
 def session_data_to_sql(context, get_session_data: pd.DataFrame):
-    df = get_session_data
+    df = get_session_data.rename(columns={
+        'Driver': 'DRIVER',
+        'DriverNumber': 'DRIVER_NUMBER',
+        'Team': 'TEAM',
+        'LapTimeFP1': 'LAPTIME_FP1',
+        'Sector1TimeFP1': 'SECTOR1_TIME_FP1',
+        'Sector2TimeFP1': 'SECTOR2_TIME_FP1',
+        'Sector3TimeFP1': 'SECTOR3_TIME_FP1',
+        'CompoundFP1': 'COMPOUND_FP1',
+        'AirTempFP1': 'AIR_TEMP_FP1',
+        'RainfallFP1': 'RAINFALL_FP1',
+        'TrackTempFP1': 'TRACK_TEMP_FP1',
+        'WindDirectionFP1': 'WIND_DIRECTION_FP1',
+        'WindSpeedFP1': 'WIND_SPEED_FP1',
+        'LapTimeFP2': 'LAPTIME_FP2',
+        'Sector1TimeFP2': 'SECTOR1_TIME_FP2',
+        'Sector2TimeFP2': 'SECTOR2_TIME_FP2',
+        'Sector3TimeFP2': 'SECTOR3_TIME_FP2',
+        'CompoundFP2': 'COMPOUND_FP2',
+        'AirTempFP2': 'AIR_TEMP_FP2',
+        'RainfallFP2': 'RAINFALL_FP2',
+        'TrackTempFP2': 'TRACK_TEMP_FP2',
+        'WindDirectionFP2': 'WIND_DIRECTION_FP2',
+        'WindSpeedFP2': 'WIND_SPEED_FP2',
+        'LapTimeFP3': 'LAPTIME_FP3',
+        'Sector1TimeFP3': 'SECTOR1_TIME_FP3',
+        'Sector2TimeFP3': 'SECTOR2_TIME_FP3',
+        'Sector3TimeFP3': 'SECTOR3_TIME_FP3',
+        'CompoundFP3': 'COMPOUND_FP3',
+        'AirTempFP3': 'AIR_TEMP_FP3',
+        'RainfallFP3': 'RAINFALL_FP3',
+        'TrackTempFP3': 'TRACK_TEMP_FP3',
+        'WindDirectionFP3': 'WIND_DIRECTION_FP3',
+        'WindSpeedFP3': 'WIND_SPEED_FP3',
+        'LapTimeQ': 'LAPTIME_Q',
+        'Sector1TimeQ': 'SECTOR1_TIME_Q',
+        'Sector2TimeQ': 'SECTOR2_TIME_Q',
+        'Sector3TimeQ': 'SECTOR3_TIME_Q',
+        'CompoundQ': 'COMPOUND_Q',
+        'AirTempQ': 'AIR_TEMP_Q',
+        'RainfallQ': 'RAINFALL_Q',
+        'TrackTempQ': 'TRACK_TEMP_Q',
+        'WindDirectionQ': 'WIND_DIRECTION_Q',
+        'WindSpeedQ': 'WIND_SPEED_Q'
+    })
     return Output(
         value=df,
         metadata={
@@ -133,7 +177,8 @@ def get_session_data_weekend(context):
         if len(fastest_laps) == 0:
             break
         fastest_laps_ordered = clean.order_laps_delta(laps=fastest_laps, include_pos=False)
-        needed_data = fastest_laps_ordered[['DriverNumber',
+        needed_data = fastest_laps_ordered[['Driver',
+                                            'DriverNumber',
                                             'LapTime',
                                             'Sector1Time',
                                             'Sector2Time',
@@ -163,7 +208,7 @@ def get_session_data_weekend(context):
             session_df = session_df.rename(columns={f'DriverNumber{suffix}': 'DriverNumber'})
             event_data = pd.merge(event_data, session_df, on='DriverNumber', how="outer")
 
-    event_data['event_cd'] = str(race_df['RoundNumber'].iloc[0]) + str(year)
+    event_data['EVENT_CD'] = str(year) + str(race_df['RoundNumber'].iloc[0])
     return Output(
         value=event_data,
         metadata={
@@ -176,7 +221,51 @@ def get_session_data_weekend(context):
 
 @asset(io_manager_key='sql_io_manager', key_prefix=[database, 'raw_session_data'])
 def session_data_to_sql_append(context, get_session_data_weekend: pd.DataFrame):
-    df = get_session_data_weekend
+    df = get_session_data_weekend.rename(columns={
+        'Driver': 'DRIVER',
+        'DriverNumber': 'DRIVER_NUMBER',
+        'Team': 'TEAM',
+        'LapTimeFP1': 'LAPTIME_FP1',
+        'Sector1TimeFP1': 'SECTOR1_TIME_FP1',
+        'Sector2TimeFP1': 'SECTOR2_TIME_FP1',
+        'Sector3TimeFP1': 'SECTOR3_TIME_FP1',
+        'CompoundFP1': 'COMPOUND_FP1',
+        'AirTempFP1': 'AIR_TEMP_FP1',
+        'RainfallFP1': 'RAINFALL_FP1',
+        'TrackTempFP1': 'TRACK_TEMP_FP1',
+        'WindDirectionFP1': 'WIND_DIRECTION_FP1',
+        'WindSpeedFP1': 'WIND_SPEED_FP1',
+        'LapTimeFP2': 'LAPTIME_FP2',
+        'Sector1TimeFP2': 'SECTOR1_TIME_FP2',
+        'Sector2TimeFP2': 'SECTOR2_TIME_FP2',
+        'Sector3TimeFP2': 'SECTOR3_TIME_FP2',
+        'CompoundFP2': 'COMPOUND_FP2',
+        'AirTempFP2': 'AIR_TEMP_FP2',
+        'RainfallFP2': 'RAINFALL_FP2',
+        'TrackTempFP2': 'TRACK_TEMP_FP2',
+        'WindDirectionFP2': 'WIND_DIRECTION_FP2',
+        'WindSpeedFP2': 'WIND_SPEED_FP2',
+        'LapTimeFP3': 'LAPTIME_FP3',
+        'Sector1TimeFP3': 'SECTOR1_TIME_FP3',
+        'Sector2TimeFP3': 'SECTOR2_TIME_FP3',
+        'Sector3TimeFP3': 'SECTOR3_TIME_FP3',
+        'CompoundFP3': 'COMPOUND_FP3',
+        'AirTempFP3': 'AIR_TEMP_FP3',
+        'RainfallFP3': 'RAINFALL_FP3',
+        'TrackTempFP3': 'TRACK_TEMP_FP3',
+        'WindDirectionFP3': 'WIND_DIRECTION_FP3',
+        'WindSpeedFP3': 'WIND_SPEED_FP3',
+        'LapTimeQ': 'LAPTIME_Q',
+        'Sector1TimeQ': 'SECTOR1_TIME_Q',
+        'Sector2TimeQ': 'SECTOR2_TIME_Q',
+        'Sector3TimeQ': 'SECTOR3_TIME_Q',
+        'CompoundQ': 'COMPOUND_Q',
+        'AirTempQ': 'AIR_TEMP_Q',
+        'RainfallQ': 'RAINFALL_Q',
+        'TrackTempQ': 'TRACK_TEMP_Q',
+        'WindDirectionQ': 'WIND_DIRECTION_Q',
+        'WindSpeedQ': 'WIND_SPEED_Q'
+    })
     return Output(
         value=df,
         metadata={

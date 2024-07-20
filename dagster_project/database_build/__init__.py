@@ -19,7 +19,6 @@ defs = Definitions(
         create_f1_calender_table_job,
         create_dim_event_view_job,
         create_dim_compound_table_job,
-        create_cleaned_session_data_view_job,
         create_all_session_data_job_analytics,
         create_dim_track_status_table_job
     ],
