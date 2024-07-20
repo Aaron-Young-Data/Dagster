@@ -14,7 +14,7 @@ server = os.getenv('SQL_SERVER')
 
 @asset()
 def get_track_data_csv(context):
-    track_data = pd.read_csv(f'{data_loc}track_data.csv')
+    track_data = pd.read_csv(f'{data_loc}track_data.csv', encoding='latin-1')
     return Output(value=track_data,
                   metadata={
                       'Markdown': MetadataValue.md(track_data.head().to_markdown()),
@@ -22,9 +22,9 @@ def get_track_data_csv(context):
                   })
 
 
-@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'track_data', 'cleanup'])
+@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'dim_track', 'cleanup'])
 def track_data_to_sql(context, get_track_data_csv: pd.DataFrame):
-    df = get_track_data_csv.drop(columns=['event_name'])
+    df = get_track_data_csv
     return Output(
         value=df,
         metadata={
@@ -33,9 +33,19 @@ def track_data_to_sql(context, get_track_data_csv: pd.DataFrame):
         }
     )
 
-@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'dim_event', 'cleanup'])
-def dim_track_data_to_sql(context, get_track_data_csv: pd.DataFrame):
-    df = get_track_data_csv[['event_name', 'event_cd']]
+@asset()
+def get_track_event_data_csv(context):
+    track_event_data = pd.read_csv(f'{data_loc}event_track_table.csv')
+    return Output(value=track_event_data,
+                  metadata={
+                      'Markdown': MetadataValue.md(track_event_data.head().to_markdown()),
+                      'Rows': len(track_event_data)
+                  })
+
+
+@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'dim_track_event', 'cleanup'])
+def track_event_data_to_sql(context, get_track_event_data_csv: pd.DataFrame):
+    df = get_track_event_data_csv
     return Output(
         value=df,
         metadata={
@@ -43,5 +53,6 @@ def dim_track_data_to_sql(context, get_track_data_csv: pd.DataFrame):
             'markdown': MetadataValue.md(df.head().to_markdown())
         }
     )
+
 
 

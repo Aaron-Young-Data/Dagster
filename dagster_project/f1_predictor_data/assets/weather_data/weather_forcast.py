@@ -45,7 +45,7 @@ def get_weather_forcast_data(context, get_calender_locations_sql: pd.DataFrame):
 
     location_df = get_calender_locations_sql
 
-    locations = location_df['Location'].to_list()
+    locations = location_df['FCST_LOCATION'].to_list()
 
     weather_data = pd.DataFrame()
 
@@ -71,7 +71,7 @@ def get_weather_forcast_data(context, get_calender_locations_sql: pd.DataFrame):
 
         loc_weather_df = pd.json_normalize(loc_weather_json['days'][0]['hours'])
 
-        loc_weather_df.loc[:, 'EventName'] = location_df[location_df['Location'] == location]['EventName'].iloc[0]
+        loc_weather_df.loc[:, 'FCST_LOCATION'] = location
 
         weather_data = pd.concat((weather_data, loc_weather_df))
 
@@ -80,7 +80,7 @@ def get_weather_forcast_data(context, get_calender_locations_sql: pd.DataFrame):
     weather_data.loc[:, 'utc_datetime'] = pd.to_datetime(
         weather_data['date'].astype(str) + ' ' + weather_data['time'].astype(str))
 
-    weather_data = weather_data[['EventName',
+    weather_data = weather_data[['FCST_LOCATION',
                                  'utc_datetime',
                                  'temp',
                                  'precip',
@@ -106,18 +106,18 @@ def get_weather_forcast_data(context, get_calender_locations_sql: pd.DataFrame):
 def weather_forcast_to_sql(context, get_weather_forcast_data: pd.DataFrame):
     load_date = datetime.today()
     df = get_weather_forcast_data
-    df.rename(columns={'EventName': 'event_name',
-                       'utc_datetime': 'datetime_utc',
-                       'temp': 'temperature',
-                       'precip': 'precipitation',
-                       'precipprob': 'precipitation_prob',
-                       'windspeed': 'wind_speed',
-                       'winddir': 'wind_direction',
-                       'cloudcover': 'cloud_cover',
-                       'conditions': 'conditions',
-                       'source': 'source'},
+    df.rename(columns={'FCST_LOCATION': 'FCST_LOCATION',
+                       'utc_datetime': 'FCST_DATETIME',
+                       'temp': 'TEMPERATURE',
+                       'precip': 'PERCIPITATION',
+                       'precipprob': 'PERCIPITATION_PROB',
+                       'windspeed': 'WIND_SPEED',
+                       'winddir': 'WIND_DIRECTION',
+                       'cloudcover': 'CLOUD_COVER',
+                       'conditions': 'CONDITIONS',
+                       'source': 'FCST_SOURCE'},
               inplace=True)
-    df.loc[:, 'load_datetime'] = load_date
+    df.loc[:, 'LOAD_TS'] = load_date
     return Output(
         value=df,
         metadata={

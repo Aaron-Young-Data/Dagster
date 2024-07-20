@@ -9,6 +9,7 @@ a.lateral_force,
 a.track_evolution,
 a.downforce
 FROM
-track_data a
+dim_track a
 join dim_event b
-on a.event_cd = b.event_cd;
+on a.track_cd = b.track_cd
+group by 1,2,3,4,5,6,7,8,9;
