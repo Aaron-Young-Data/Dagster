@@ -1,15 +1,15 @@
 DROP TABLE IF EXISTS weather_forcast;
 
-CREATE TABLE weather_forcast (
-event_name varchar(30),
-datetime_utc datetime,
-temperature float,
-precipitation float,
-precipitation_prob float,
-wind_speed float,
-wind_direction float,
-cloud_cover float,
-conditions varchar(30),
-source varchar(5),
-load_datetime datetime
+CREATE TABLE WEATHER_FORECAST (
+FCST_LOCATION varchar(30),
+FCST_DATETIME datetime,
+TEMPERATURE float,
+PERCIPITATION float,
+PERCIPITATION_PROB float,
+WIND_SPEED float,
+WIND_DIRECTION float,
+CLOUD_COVER float,
+CONDITIONS varchar(30),
+FCST_SOURCE varchar(5),
+LOAD_TS datetime
 )
