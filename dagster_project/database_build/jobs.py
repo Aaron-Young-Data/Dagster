@@ -4,7 +4,8 @@ from dagster import (
 
 from .assets import *
 from .assets.f1_predictor.weather_data import *
-from .assets.f1_predictor.track_data import *
+from .assets.f1_predictor.dim_track_event import *
+from .assets.f1_predictor.dim_track import *
 from .assets.f1_predictor.raw_session_data import *
 from .assets.f1_predictor.f1_calender import *
 from .assets.f1_predictor.dim_event import *
@@ -18,8 +19,12 @@ create_weather_forcast_table_job = define_asset_job("create_weather_forcast_tabl
                                                     selection=AssetSelection.assets(create_weather_forcast),
                                                     description="Create weather forcast data table")
 
-create_track_data_table_job = define_asset_job("create_track_data_table_job",
-                                               selection=AssetSelection.assets(create_track_data),
+create_dim_track_table_job = define_asset_job("create_dim_track_table_job",
+                                               selection=AssetSelection.assets(create_dim_track),
+                                               description="Create track data table")
+
+create_dim_track_event_table_job = define_asset_job("create_dim_track_event_table_job",
+                                               selection=AssetSelection.assets(create_dim_track_event),
                                                description="Create track data table")
 
 create_raw_session_data_table_job = define_asset_job("create_raw_session_data_table_job",
