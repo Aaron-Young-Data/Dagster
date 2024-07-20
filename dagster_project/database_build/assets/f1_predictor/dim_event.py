@@ -11,8 +11,8 @@ port = os.getenv('SQL_PORT')
 server = os.getenv('SQL_SERVER')
 
 @asset()
-def create_dim_event(context):
-    query = FileUtils.file_to_query('create_dim_event')
+def create_dim_event_view(context):
+    query = FileUtils.file_to_query('create_dim_event_view')
     context.log.info(f'Query to run: \n{query}')
     con = MySQLDirectConnection(port, database, user, password, server)
     df = con.run_query_no_output(query=query)

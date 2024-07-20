@@ -35,8 +35,8 @@ create_f1_calender_table_job = define_asset_job("create_f1_calender_table_job",
                                                 selection=AssetSelection.assets(create_f1_calender),
                                                 description="Create f1 calender table")
 
-create_dim_event_table_job = define_asset_job("create_dim_event_table_job",
-                                              selection=AssetSelection.assets(create_dim_event),
+create_dim_event_view_job = define_asset_job("create_dim_event_view_job",
+                                              selection=AssetSelection.assets(create_dim_event_view),
                                               description="Create dim event table")
 
 create_dim_compound_table_job = define_asset_job("create_dim_compound_table_job",

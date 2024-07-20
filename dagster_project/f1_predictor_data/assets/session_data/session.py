@@ -87,9 +87,8 @@ def get_session_data(context):
                     session_df = session_df.rename(columns={f'Team{suffix}': 'Team'})
                     session_df = session_df.rename(columns={f'Driver{suffix}': 'Driver'})
                     event_data = pd.merge(event_data, session_df, on=['DriverNumber', 'Driver', 'Team'], how="outer")
-            event_data['event_name'] = race
-            event_data['year'] = year
-            event_data['event_type'] = event_type
+
+            event_data['event_cd'] = str(races_df[races_df['EventName'] == race]['RoundNumber'].iloc[0]) + str(year)
             full_data = pd.concat([full_data, event_data])
     return Output(
         value=full_data,
@@ -120,6 +119,8 @@ def get_session_data_weekend(context):
     event_name = context.op_config['event_name']
     year = context.op_config['year']
 
+    calendar = pd.read_csv(f"{data_loc}calender.csv")
+    race_df = calendar[(pd.to_datetime(calendar['EventDate']).dt.year == year & calendar['EventName'] == event_name)]
     if event_type == 'conventional':
         session_list = ['FP1', 'FP2', 'FP3', 'Q']
     else:
@@ -162,9 +163,7 @@ def get_session_data_weekend(context):
             session_df = session_df.rename(columns={f'DriverNumber{suffix}': 'DriverNumber'})
             event_data = pd.merge(event_data, session_df, on='DriverNumber', how="outer")
 
-    event_data['event_name'] = event_name
-    event_data['year'] = year
-    event_data['event_type'] = event_type
+    event_data['event_cd'] = str(race_df['RoundNumber'].iloc[0]) + str(year)
     return Output(
         value=event_data,
         metadata={
