@@ -37,11 +37,11 @@ def get_calender_locations_sql(context):
 
 
 @asset(partitions_def=daily_partitions)
-def get_weather_forcast_data(context, get_calender_locations_sql: pd.DataFrame):
+def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame):
     partition_date_str = context.partition_key
-    forcast_date = datetime.strptime(partition_date_str, '%Y-%m-%d').date()
+    forecast_date = datetime.strptime(partition_date_str, '%Y-%m-%d').date()
 
-    context.log.info('Getting forcast for: {}'.format(forcast_date))
+    context.log.info('Getting forecast for: {}'.format(forecast_date))
 
     location_df = get_calender_locations_sql
 
@@ -76,7 +76,7 @@ def get_weather_forcast_data(context, get_calender_locations_sql: pd.DataFrame):
         weather_data = pd.concat((weather_data, loc_weather_df))
 
     weather_data.rename(columns={'datetime': 'time'}, inplace=True)
-    weather_data.loc[:, 'date'] = forcast_date
+    weather_data.loc[:, 'date'] = forecast_date
     weather_data.loc[:, 'utc_datetime'] = pd.to_datetime(
         weather_data['date'].astype(str) + ' ' + weather_data['time'].astype(str))
 
@@ -101,11 +101,11 @@ def get_weather_forcast_data(context, get_calender_locations_sql: pd.DataFrame):
 
 
 @asset(io_manager_key='sql_io_manager',
-       key_prefix=[database, 'weather_forcast', 'append'],
+       key_prefix=[database, 'weather_forecast', 'append'],
        partitions_def=daily_partitions)
-def weather_forcast_to_sql(context, get_weather_forcast_data: pd.DataFrame):
+def weather_forecast_to_sql(context, get_weather_forecast_data: pd.DataFrame):
     load_date = datetime.today()
-    df = get_weather_forcast_data
+    df = get_weather_forecast_data
     df.rename(columns={'FCST_LOCATION': 'FCST_LOCATION',
                        'utc_datetime': 'FCST_DATETIME',
                        'temp': 'TEMPERATURE',

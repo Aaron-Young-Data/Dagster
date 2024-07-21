@@ -1,7 +1,7 @@
 from dagster import load_assets_from_package_module, load_assets_from_modules
 from .dim_tables import calender, compound, track_data
 from .session_data import session
-from .weather_data import weather_forcast
+from .weather_data import weather_forecast
 
 DIM_TABLE_UPDATE = "dim_table_update"
 dim_table_update_assets = load_assets_from_package_module(package_module=dim_tables,

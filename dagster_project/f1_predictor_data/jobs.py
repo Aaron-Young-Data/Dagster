@@ -7,7 +7,7 @@ from .assets.dim_tables.calender import *
 from .assets.dim_tables.compound import *
 from .assets.dim_tables.track_data import *
 from .assets.session_data.session import *
-from .assets.weather_data.weather_forcast import *
+from .assets.weather_data.weather_forecast import *
 from .partitions import daily_partitions
 
 update_calender_job = define_asset_job("update_calender_job",
@@ -52,7 +52,7 @@ compound_data_load_job = define_asset_job('load_compound_data_job',
 
 weather_forecast_data_load_job = define_asset_job('load_weather_forcast_data_job',
                                                   selection=AssetSelection.assets(get_calender_locations_sql,
-                                                                                  get_weather_forcast_data,
-                                                                                  weather_forcast_to_sql),
+                                                                                  get_weather_forecast_data,
+                                                                                  weather_forecast_to_sql),
                                                   description='Job to upload the weather forcast',
                                                   partitions_def=daily_partitions)
