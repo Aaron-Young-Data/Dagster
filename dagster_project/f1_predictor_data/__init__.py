@@ -25,7 +25,7 @@ defs = Definitions(
     schedules=[update_calender_job_weekly_schedule,
                update_compound_job_weekly_schedule,
                update_track_job_weekly_schedule,
-               weather_forcast_schedule],
+               weather_forecast_schedule],
     sensors=[
              weekend_session_data_load_job_sensor,
              session_data_load_job_sensor],

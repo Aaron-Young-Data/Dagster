@@ -63,7 +63,7 @@ def clean_data_from_sql(context):
 
 
 @asset()
-def weather_forcast_from_sql(context, session_info):
+def weather_forecast_from_sql(context, session_info):
     session_data_query = FileUtils.file_to_query('sql_session_datetime')
     session_data_query = session_data_query.replace('{event}', session_info['event_name'])
     session_data_query = session_data_query.replace('{year}', str(session_info['year']))
@@ -77,7 +77,7 @@ def weather_forcast_from_sql(context, session_info):
 
     context.log.info(session_time)
 
-    weather_data_query = FileUtils.file_to_query('sql_weather_forcast_data')
+    weather_data_query = FileUtils.file_to_query('sql_weather_forecast_data')
 
     weather_data_query = weather_data_query.replace('{event}', session_info['event_name'])
     weather_data_query = weather_data_query.replace('{session_date_time}', str(session_time))
@@ -209,9 +209,9 @@ def add_track_data(context, clean_data: pd.DataFrame, session_info: dict, get_tr
 
 
 @asset()
-def add_weather_forcast_data(context, add_track_data: pd.DataFrame, weather_forcast_from_sql: pd.DataFrame):
+def add_weather_forecast_data(context, add_track_data: pd.DataFrame, weather_forecast_from_sql: pd.DataFrame):
     df = add_track_data
-    weather_data = weather_forcast_from_sql
+    weather_data = weather_forecast_from_sql
 
     for col in weather_data.columns[1:]:
         df[col] = weather_data[col].iloc[0]
@@ -271,16 +271,16 @@ def add_weather_forcast_data(context, add_track_data: pd.DataFrame, weather_forc
 
 
 @asset()
-def create_prediction(context, add_weather_forcast_data: pd.DataFrame, clean_data_from_sql: pd.DataFrame):
+def create_prediction(context, add_weather_forecast_data: pd.DataFrame, clean_data_from_sql: pd.DataFrame):
     lr = LinearRegression()
     data = clean_data_from_sql
     y = data['LAPTIME_Q']
     x = data.drop('LAPTIME_Q', axis=1)
     lr.fit(x, y)
     predict_df = pd.DataFrame()
-    for i in range(len(add_weather_forcast_data)):
+    for i in range(len(add_weather_forecast_data)):
         vals = pd.DataFrame()
-        temp = add_weather_forcast_data.iloc[i].to_frame().transpose()
+        temp = add_weather_forecast_data.iloc[i].to_frame().transpose()
         idx = temp.index[0]
         predicted_time = lr.predict(temp.drop(['DRIVER_NUMBER'], axis=1))
         vals['drv_no'] = temp['DRIVER_NUMBER']

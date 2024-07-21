@@ -23,7 +23,8 @@ def update_compound_job_weekly_schedule(context: ScheduleEvaluationContext):
 def update_track_job_weekly_schedule(context: ScheduleEvaluationContext):
     return RunRequest()
 
-weather_forcast_schedule = build_schedule_from_partitioned_job(
+
+weather_forecast_schedule = build_schedule_from_partitioned_job(
     job=weather_forecast_data_load_job,
     hour_of_day=0,
     minute_of_hour=5
