@@ -15,28 +15,28 @@ update_calender_job = define_asset_job("update_calender_job",
                                                                        calender_to_csv, calender_to_sql),
                                        description="Job to update the current years F1 calender")
 
+full_session_data_load_job = define_asset_job("full_session_data_load_job",
+                                              selection=AssetSelection.assets(get_full_session_data,
+                                                                              full_session_data_to_sql),
+                                              description="Job to pull of session data for a list of years (2018+)"
+                                                          " and upload the data to MySQL and CSV",
+                                              config={'ops':
+                                                          {'get_full_session_data':
+                                                               {"config":
+                                                                    {'year_list': [2018, 2019, 2020, 2021, 2022, 2023]
+                                                                     }}}})
+
 session_data_load_job = define_asset_job("session_data_load_job",
                                          selection=AssetSelection.assets(get_session_data,
                                                                          session_data_to_sql),
-                                         description="Job to pull of session data for a list of years (2018+)"
-                                                     " and upload the data to MySQL and CSV",
+                                         description="Job to upload the selected weekend data to MySQL",
                                          config={'ops':
                                                      {'get_session_data':
                                                           {"config":
-                                                               {'year_list': [2018, 2019, 2020, 2021, 2022, 2023]
+                                                               {'session': 'Practice 1',
+                                                                'event_name': 'Abu Dhabi Grand Prix',
+                                                                'year': 2023
                                                                 }}}})
-
-weekend_session_data_load_job = define_asset_job("weekend_session_data_load_job",
-                                                 selection=AssetSelection.assets(get_session_data_weekend,
-                                                                                 session_data_to_sql_append),
-                                                 description="Job to upload the selected weekend data to MySQL",
-                                                 config={'ops':
-                                                             {'get_session_data_weekend':
-                                                                  {"config":
-                                                                       {'event_type': 'conventional',
-                                                                        'event_name': 'Abu Dhabi Grand Prix',
-                                                                        'year': 2023
-                                                                        }}}})
 
 track_data_load_job = define_asset_job('load_track_data_job',
                                        selection=AssetSelection.assets(get_track_data_csv,
