@@ -53,7 +53,7 @@ def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame)
         api_query = ('https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{}/{}/{'
                      '}?key={}&unitGroup=metric&include=hours').format(location,
                                                                        str(forecast_date),
-                                                                       str(forecast_date + timedelta(weeks=1)),
+                                                                       str(forecast_date + timedelta(days=6)),
                                                                        weather_data_key)
 
         context.log.info('Running query URL: {}'.format(api_query))

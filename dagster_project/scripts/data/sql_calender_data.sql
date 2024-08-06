@@ -1,0 +1,10 @@
+SELECT
+    EVENT_NAME,
+    FCST_LOCATION
+FROM
+    DIM_EVENT
+WHERE
+    EVENT_YEAR = '{partitioned_date_year}'
+GROUP BY
+    EVENT_NAME,
+    FCST_LOCATION

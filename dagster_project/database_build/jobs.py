@@ -6,7 +6,7 @@ from .assets import *
 from .assets.f1_predictor.weather_data import *
 from .assets.f1_predictor.dim_track_event import *
 from .assets.f1_predictor.dim_track import *
-from .assets.f1_predictor.raw_session_data import *
+from .assets.f1_predictor.session_data import *
 from .assets.f1_predictor.f1_calender import *
 from .assets.f1_predictor.dim_event import *
 from .assets.f1_predictor.dim_compound import *
@@ -15,8 +15,12 @@ from .assets.data_analytics.create_dim_track_status import *
 from .partitions import daily_partitions
 
 create_weather_forcast_table_job = define_asset_job("create_weather_forcast_table_job",
-                                                    selection=AssetSelection.assets(create_weather_forcast),
+                                                    selection=AssetSelection.assets(create_weather_forcast_prod),
                                                     description="Create weather forcast data table")
+
+create_weather_forcast_view_job = define_asset_job("create_weather_forcast_view_job",
+                                                    selection=AssetSelection.assets(create_weather_forcast_dev),
+                                                    description="Create weather forcast data view")
 
 create_dim_track_table_job = define_asset_job("create_dim_track_table_job",
                                                selection=AssetSelection.assets(create_dim_track),
@@ -27,7 +31,7 @@ create_dim_track_event_table_job = define_asset_job("create_dim_track_event_tabl
                                                description="Create track data table")
 
 create_raw_session_data_table_job = define_asset_job("create_raw_session_data_table_job",
-                                                     selection=AssetSelection.assets(create_raw_session_data),
+                                                     selection=AssetSelection.assets(create_session_data),
                                                      description="Create raw session data table")
 
 create_f1_calender_table_job = define_asset_job("create_f1_calender_table_job",
