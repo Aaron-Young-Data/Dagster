@@ -125,30 +125,45 @@ def evaluate_prediction_job_sensor(context):
         return SkipReason(f"Qualifying data is not available for {event_name} in MySQL database yet")
 
 
-@sensor(job=create_dnn_model_job, minimum_interval_seconds=300)
+@sensor(job=create_dnn_model_job, minimum_interval_seconds=30)
 def create_dnn_model_sensor(context):
-    monitored_jobs = [
-        "weekend_session_data_load_job"
-    ]
+    if context.cursor == str(date.today()):
+        return SkipReason("Sensor has already run today")
 
-    last_cursor = context.cursor or "0"
-    last_timestamp = datetime.fromtimestamp(float(last_cursor))
+    # load calender csv into dataframe updated weekly by update_calender_job
+    calendar = pd.read_csv(f"{data_loc}calender.csv")
 
-    for job_name in monitored_jobs:
-        run_records = context.instance.get_run_records(
-            filters=RunsFilter(
-                job_name="weekend_session_data_load_job",
-                statuses=[DagsterRunStatus.SUCCESS],
-                updated_after=last_timestamp
-            ),
-            order_by="update_timestamp",
-            ascending=False,
-        )
+    # convert GMT to UTC as calendar data is in UTC
+    time_zone = pytz.timezone("GMT")
+    naive = datetime.today()
+    local_dt = time_zone.localize(naive, is_dst=None)
+    utc_dt = local_dt.astimezone(pytz.utc)
 
-        if not run_records:
-            return SkipReason(
-                f"Job {job_name} has not completed successfully since {last_timestamp}"
-            )
+    # this find the closes race in the calendar
+    closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
 
-    context.update_cursor(str(datetime.utcnow().timestamp()))
-    return RunRequest()
+    closest_race['EventDate'] = pd.to_datetime(closest_race['EventDate'])
+    closest_race['Session4DateUtc'] = pd.to_datetime(closest_race['Session4DateUtc'])
+
+    event_name = closest_race['EventName']
+    event_year = closest_race['EventDate'].year
+
+    if closest_race['Session4DateUtc'].date() != utc_dt.date():
+        return SkipReason(f'{event_name} - Qualifying is not today')
+
+    query = FileUtils.file_to_query('prediction_eval_job_sensor')
+
+    query_modified = query.replace('{event_name}', event_name)
+    query_modified = query_modified.replace('{event_year}', str(event_year))
+
+    con = MySQLDirectConnection(port, database, user, password, server)
+
+    df = con.run_query(query=query_modified)
+
+    row_count = int(df['RowCount'].iloc[0])
+
+    if row_count != 0:
+        context.update_cursor(str(date.today()))
+        return RunRequest()
+    else:
+        return SkipReason(f"Qualifying data is not available for {event_name} in MySQL database yet")
