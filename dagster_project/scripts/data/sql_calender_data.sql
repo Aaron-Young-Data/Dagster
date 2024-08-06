@@ -4,7 +4,7 @@ SELECT
 FROM
     DIM_EVENT
 WHERE
-    EVENT_YEAR = {partitioned_date_year}
+    EVENT_YEAR = '{partitioned_date_year}'
 GROUP BY
     EVENT_NAME,
-    FCST_LOCATION;
+    FCST_LOCATION
