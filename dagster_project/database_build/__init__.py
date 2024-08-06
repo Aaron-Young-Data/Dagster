@@ -15,7 +15,7 @@ defs = Definitions(
         create_weather_forcast_table_job,
         create_dim_track_table_job,
         create_dim_track_event_table_job,
-        create_raw_session_data_table_job,
+        create_session_data_table_job,
         create_f1_calender_table_job,
         create_dim_event_view_job,
         create_dim_compound_table_job,

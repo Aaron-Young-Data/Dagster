@@ -30,9 +30,9 @@ create_dim_track_event_table_job = define_asset_job("create_dim_track_event_tabl
                                                selection=AssetSelection.assets(create_dim_track_event),
                                                description="Create track data table")
 
-create_raw_session_data_table_job = define_asset_job("create_raw_session_data_table_job",
+create_session_data_table_job = define_asset_job("create_session_data_table_job",
                                                      selection=AssetSelection.assets(create_session_data),
-                                                     description="Create raw session data table")
+                                                     description="Create session data table")
 
 create_f1_calender_table_job = define_asset_job("create_f1_calender_table_job",
                                                 selection=AssetSelection.assets(create_f1_calender),
