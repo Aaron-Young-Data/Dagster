@@ -6,6 +6,7 @@ from fast_f1_functions.collect_data import GetData, CleanData
 from resources.sql_io_manager import MySQLDirectConnection
 from utils.file_utils import FileUtils
 from datetime import date
+from utils.discord_utils import DiscordUtils
 
 data = GetData()
 clean = CleanData()
@@ -124,6 +125,9 @@ def get_session_data(context):
     event_name = context.op_config['event_name']
     year = context.op_config['year']
 
+    dis = DiscordUtils()
+    dis.send_message(message='Getting session data for {} - {}'.format(event_name, session))
+
     calendar = pd.read_csv(f"{data_loc}calender.csv")
     race_df = calendar[(pd.to_datetime(calendar['EventDate']).dt.year == year) & (calendar['EventName'] == event_name)]
 
@@ -189,6 +193,12 @@ def session_data_to_sql(context, get_session_data: pd.DataFrame):
     })
 
     df['LOAD_TS'] = datetime.datetime.now()
+
+    dis = DiscordUtils()
+    dis.send_message(message='Loaded {} rows into {}.session_data at {}'.format(len(df),
+                                                                                database,
+                                                                                df['LOAD_TS'].iloc[0]))
+
     return Output(
         value=df,
         metadata={
