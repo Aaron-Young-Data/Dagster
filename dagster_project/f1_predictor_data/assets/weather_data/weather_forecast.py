@@ -6,7 +6,7 @@ from resources.sql_io_manager import MySQLDirectConnection
 from utils.file_utils import FileUtils
 from datetime import datetime, timedelta, date
 import urllib
-from f1_predictor_data.partitions import daily_partitions
+from f1_predictor_data.partitions import weekly_partitions
 
 weather_data_key = os.getenv('WEATHER_DATA_KEY')
 data_loc = os.getenv('DATA_STORE_LOC')
@@ -17,7 +17,7 @@ port = os.getenv('SQL_PORT')
 server = os.getenv('SQL_SERVER')
 
 
-@asset(partitions_def=daily_partitions)
+@asset(partitions_def=weekly_partitions)
 def get_calender_locations_sql(context):
     partition_date_str = context.partition_key
     forcast_date = datetime.strptime(partition_date_str, '%Y-%M-%d')
@@ -36,7 +36,7 @@ def get_calender_locations_sql(context):
     )
 
 
-@asset(partitions_def=daily_partitions)
+@asset(partitions_def=weekly_partitions)
 def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame):
     partition_date_str = context.partition_key
     forecast_date = datetime.strptime(partition_date_str, '%Y-%m-%d').date()
@@ -53,7 +53,7 @@ def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame)
         api_query = ('https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{}/{}/{'
                      '}?key={}&unitGroup=metric&include=hours').format(location,
                                                                        str(forecast_date),
-                                                                       str(forecast_date + timedelta(days=6)),
+                                                                       str(forecast_date + timedelta(days=2)),
                                                                        weather_data_key)
 
         context.log.info('Running query URL: {}'.format(api_query))
@@ -102,7 +102,7 @@ def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame)
 
 @asset(io_manager_key='sql_io_manager',
        key_prefix=[database, 'weather_forecast', 'append'],
-       partitions_def=daily_partitions)
+       partitions_def=weekly_partitions)
 def weather_forecast_to_sql(context, get_weather_forecast_data: pd.DataFrame):
     load_date = datetime.today()
     df = get_weather_forecast_data
