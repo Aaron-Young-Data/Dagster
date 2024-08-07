@@ -98,7 +98,7 @@ to be made easier.
 - create_weather_forcast_view_job
 - create_weather_forcast_table_job
 - create_session_data_table_job
-- create_f1_calendar_table_job 
+- create_f1_calender_table_job 
 - create_dim_track_table_job 
 - create_dim_track_status_table_job 
 - create_dim_track_event_table_job 
