@@ -191,7 +191,7 @@ def send_discord(context,
     event_name = session_info['event_name']
 
     output_df = pd.DataFrame()
-    output_df['Driver'] = create_prediction['drv_no'].astype(int)
+    output_df['Driver'] = create_prediction['DRIVER']
     output_df['Predicted Position'] = create_prediction['Predicted_POS'].astype(int)
     output_df['Predicted Time'] = create_prediction['predicted_time'].astype(float).round(3)
 
