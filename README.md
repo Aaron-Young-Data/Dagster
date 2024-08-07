@@ -28,18 +28,25 @@ workspace are:
 - F1_Prediction_Job
 
 <p align="center">
-    <img src="readme_imgs/F1_prediction_job.png" alt="evaluation model output" width=600/>
+    <img src="readme_imgs/F1_prediction_job.png" alt="prediction job graph" width=600/>
 </p>
 
 - Evaluation_Prediction_Job
 
 <p align="center">
-    <img src="readme_imgs/F1_prediction_evaluation_job.png" alt="evaluation model output" width=600/>
+    <img src="readme_imgs/F1_prediction_evaluation_job.png" alt="evaluation job graph" width=600/>
 </p>
 
-Both of these jobs use sensors to check if the data is available for the practice sessions from the API and will launch
-the run with the correct config. The prediction job will output a table of the predicted result into a Discord server 
-with the predicted time and position for each driver. 
+- create_dnn_model_job
+
+<p align="center">
+    <img src="readme_imgs/create_dnn_model_job.png" alt="create dnn model job graph" width=600/>
+</p>
+
+These jobs use sensors to check if the data is available for the practice sessions in the MySQL server and will 
+launch the run with the correct config. The prediction job will output a table of the predicted result into a Discord 
+server with the predicted time and position for each driver. The create dnn model job will build a new dnn model that 
+will be used in a future revision.
 
 <p align="center">
 <img src="readme_imgs\example_output.png" alt="example model output" width="350"/>
@@ -58,16 +65,16 @@ qualifying time against the predicted as well as doing the same for the position
 This workspace is all things data! This is workspace keeps all the tables in the MySQL server up to date. There are 
 currently six jobs that are in this workspace: 
 
-- session_data_load_job - Loads all the available data from the API (2018+)
-- weekend_session_data_load_job - Loads the data from the most recent weekend
+- full_session_data_load_job - Loads all the available data from the API (2018+)
+- session_data_load_job - This will load the session data for each session when its available (FP1 - Qualifying)
 - load_compound_data_job - Loads the dim_compound table
 - load_track_data_job - Loads the dim_track table
-- load_weather_forcast_data_job - Partitioned job that loads the daily weather forcast
+- load_weather_forcast_data_job - Partitioned job that loads the weather forcast for every race weekend 
 - update_calendar_job - Loads the F1 calendar and creates CSV output for the sensors
 
-The weekend session data uses a sensor to detect when the data is available from the qualifying session and will collect 
-and upload the data into the MySQL database. The session data jobs also uses a sensor to check if there is data in the
-main data table and will launch a run if the table is empty. All the other jobs have weekly/daily schedules.
+The session data job uses a sensor to detect if data is available for the most recent session and then will collect and
+load the session data into the MySQL database. The full  session data jobs also uses a sensor to check if there is data 
+in the main data table and will launch a run if the table is empty. All the other jobs have weekly schedules.
 
 ### data_analytics
 
@@ -88,19 +95,22 @@ This workspace is used for being able to quickly build all the tables and views 
 makes it easier to create tables in the production environment as you can just run the job. This also allows for changes
 to be made easier. 
 
+- create_weather_forcast_view_job
 - create_weather_forcast_table_job
-- create_track_data_table_job 
-- create_raw_session_data_table_job 
+- create_session_data_table_job
 - create_f1_calendar_table_job 
-- create_dim_event_table_job 
+- create_dim_track_table_job 
+- create_dim_track_status_table_job 
+- create_dim_track_event_table_job 
+- create_dim_event_view_job 
 - create_dim_compound_table_job 
 - create_cleaned_session_data_view_job 
-- create_all_session_data_job_analytics 
-- create_dim_track_status_table_job
+- create_all_session_data_job_analytics
 
 ### core
 
 The core workspace is used for any core jobs for the upkeep of the Dagster system. This contains a failures sensor that
 will send notification to a Discord server with the job context and failure reason. 
 
-Updated - 29/04/24
+Initial Commit - 29/04/24
+Update (Database rebuild changes) - 07/08/24
