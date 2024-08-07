@@ -86,7 +86,7 @@ SELECT
     round(sum(dat.TRACK_TEMP_FP3),2) AS TRACK_TEMP_FP3,
     round(sum(dat.WIND_DIRECTION_FP3),2) AS WIND_DIRECTION_FP3,
     round(sum(dat.WIND_SPEED_FP3),2) AS WIND_SPEED_FP3,
-    round(sum(COMPOUND_Q),2) AS LAPTIME_Q,
+    round(sum(LAPTIME_Q),2) AS LAPTIME_Q,
     round(sum(dat.SECTOR1_TIME_Q),2) AS SECTOR1_TIME_Q,
     round(sum(dat.SECTOR2_TIME_Q),2) AS SECTOR2_TIME_Q,
     round(sum(dat.SECTOR3_TIME_Q),2) AS ASSECTOR3_TIME_Q,
