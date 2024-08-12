@@ -7,6 +7,9 @@ from utils.file_utils import FileUtils
 from datetime import datetime, timedelta, date
 import urllib
 from f1_predictor_data.partitions import weekly_partitions
+import openmeteo_requests
+import requests_cache
+from retry_requests import retry
 
 weather_data_key = os.getenv('WEATHER_DATA_KEY')
 data_loc = os.getenv('DATA_STORE_LOC')
@@ -15,6 +18,10 @@ password = os.getenv('SQL_PASSWORD')
 database = os.getenv('DATABASE')
 port = os.getenv('SQL_PORT')
 server = os.getenv('SQL_SERVER')
+
+cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
+retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
+openmeteo = openmeteo_requests.Client(session=retry_session)
 
 
 @asset(partitions_def=weekly_partitions)
@@ -41,44 +48,63 @@ def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame)
     partition_date_str = context.partition_key
     forecast_date = datetime.strptime(partition_date_str, '%Y-%m-%d').date()
 
-    context.log.info('Getting forecast for: {}'.format(forecast_date))
+    context.log.info('Getting forecast for: {} to {}'.format(forecast_date, forecast_date + timedelta(days=2)))
+
+    api_url = "https://api.open-meteo.com/v1/forecast"
 
     location_df = get_calender_locations_sql
 
-    locations = location_df['FCST_LOCATION'].to_list()
-
     weather_data = pd.DataFrame()
 
-    for location in locations:
-        api_query = ('https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{}/{}/{'
-                     '}?key={}&unitGroup=metric&include=hours').format(location,
-                                                                       str(forecast_date),
-                                                                       str(forecast_date + timedelta(days=2)),
-                                                                       weather_data_key)
+    for location in location_df.FCST_LOCATION.unique():#
+        context.log.info('Getting data for {}'.format(location))
 
-        context.log.info('Running query URL: {}'.format(api_query))
+        latitude = location_df[location_df['FCST_LOCATION'] == location].LATITUDE.iloc[0]
+        longitude = location_df[location_df['FCST_LOCATION'] == location].LONGITUDE.iloc[0]
 
-        try:
-            data = urllib.request.urlopen(api_query)
-        except urllib.error.HTTPError as e:
-            err = e.read().decode()
-            raise Exception('Error code: {} {}'.format(e.code, err))
-        except urllib.error.URLError as e:
-            err = e.read().decode()
-            raise Exception('Error code: {} {}'.format(e.code, err))
+        params = {
+            "latitude": [latitude],
+            "longitude": [longitude],
+            "hourly": ["temperature_2m", "precipitation_probability", "precipitation", "weather_code", "cloud_cover",
+                       "wind_speed_10m", "wind_direction_10m"],
+            "timezone": "GMT",
+            "start_date": str(forecast_date),
+            "end_date": str(forecast_date + timedelta(days=3))
+        }
 
-        loc_weather_json = json.loads(data.read().decode('utf-8'))
+        responses = openmeteo.weather_api(api_url, params=params)
 
-        loc_weather_df = pd.json_normalize(loc_weather_json['days'][0]['hours'])
+        response = responses[0]
 
-        loc_weather_df.loc[:, 'FCST_LOCATION'] = location
+        hourly = response.Hourly()
+        hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
+        hourly_precipitation_probability = hourly.Variables(1).ValuesAsNumpy()
+        hourly_precipitation = hourly.Variables(2).ValuesAsNumpy()
+        hourly_weather_code = hourly.Variables(3).ValuesAsNumpy()
+        hourly_cloud_cover = hourly.Variables(4).ValuesAsNumpy()
+        hourly_wind_speed_10m = hourly.Variables(5).ValuesAsNumpy()
+        hourly_wind_direction_10m = hourly.Variables(6).ValuesAsNumpy()
 
-        weather_data = pd.concat((weather_data, loc_weather_df))
+        hourly_data = {"utc_datetime": pd.date_range(
+            start=pd.to_datetime(hourly.Time(), unit="s", utc=True),
+            end=pd.to_datetime(hourly.TimeEnd(), unit="s", utc=True),
+            freq=pd.Timedelta(seconds=hourly.Interval()),
+            inclusive="left"
+        )}
 
-    weather_data.rename(columns={'datetime': 'time'}, inplace=True)
-    weather_data.loc[:, 'date'] = forecast_date
-    weather_data.loc[:, 'utc_datetime'] = pd.to_datetime(
-        weather_data['date'].astype(str) + ' ' + weather_data['time'].astype(str))
+        hourly_data['FCST_LOCATION'] = location
+        hourly_data['source'] = 'openmeteo'
+        hourly_data["temp"] = hourly_temperature_2m
+        hourly_data["precipprob"] = hourly_precipitation_probability
+        hourly_data["precip"] = hourly_precipitation
+        hourly_data["conditions"] = hourly_weather_code
+        hourly_data["cloudcover"] = hourly_cloud_cover
+        hourly_data["windspeed"] = hourly_wind_speed_10m
+        hourly_data["winddir"] = hourly_wind_direction_10m
+
+        hourly_dataframe = pd.DataFrame(data=hourly_data)
+
+        weather_data = pd.concat((weather_data, hourly_dataframe))
 
     weather_data = weather_data[['FCST_LOCATION',
                                  'utc_datetime',
@@ -101,7 +127,7 @@ def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame)
 
 
 @asset(io_manager_key='sql_io_manager',
-       key_prefix=[database, 'weather_forecast', 'append'],
+       key_prefix=['ml_project_prod', 'weather_forecast', 'append'],
        partitions_def=weekly_partitions)
 def weather_forecast_to_sql(context, get_weather_forecast_data: pd.DataFrame):
     load_date = datetime.today()
