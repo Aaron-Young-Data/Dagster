@@ -21,13 +21,15 @@ defs = Definitions(
         compound_data_load_job,
         session_data_load_job,
         weather_forecast_data_load_job,
-        location_data_load_job
+        location_data_load_job,
+        weather_type_load_job
     ],
     schedules=[update_calender_job_weekly_schedule,
                update_compound_job_weekly_schedule,
                update_track_job_weekly_schedule,
                weather_forecast_schedule,
-               update_location_job_weekly_schedule],
+               update_location_job_weekly_schedule,
+               update_weather_data_type_schedule],
     sensors=[
              full_session_data_load_job_sensor,
              session_data_load_job_sensor],

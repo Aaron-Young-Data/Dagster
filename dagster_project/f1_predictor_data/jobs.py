@@ -9,6 +9,7 @@ from .assets.dim_tables.track_data import *
 from .assets.session_data.session import *
 from .assets.dim_tables.location import *
 from .assets.weather_data.weather_forecast import *
+from .assets.dim_tables.weather_type import *
 from .partitions import weekly_partitions
 
 update_calender_job = define_asset_job("update_calender_job",
@@ -20,6 +21,11 @@ location_data_load_job = define_asset_job("location_data_load_job",
                                           selection=AssetSelection.assets(get_location_data,
                                                                           location_to_sql),
                                           description="Job to update the dim location table")
+
+weather_type_load_job = define_asset_job("weather_type_load_job",
+                                          selection=AssetSelection.assets(get_weather_type_csv,
+                                                                          weather_type_to_sql),
+                                          description="Job to update the dim weather type table")
 
 full_session_data_load_job = define_asset_job("full_session_data_load_job",
                                               selection=AssetSelection.assets(get_full_session_data,

@@ -9,11 +9,13 @@ from .partitions import weekly_partitions
 def update_calender_job_weekly_schedule(context: ScheduleEvaluationContext):
     return RunRequest()
 
+
 @schedule(job=location_data_load_job,
           cron_schedule="0 12 * * 4",
           execution_timezone="GMT")
 def update_location_job_weekly_schedule(context: ScheduleEvaluationContext):
     return RunRequest()
+
 
 @schedule(job=compound_data_load_job,
           cron_schedule="0 12 * * 4",
@@ -26,6 +28,13 @@ def update_compound_job_weekly_schedule(context: ScheduleEvaluationContext):
           cron_schedule="0 12 * * 4",
           execution_timezone="GMT")
 def update_track_job_weekly_schedule(context: ScheduleEvaluationContext):
+    return RunRequest()
+
+
+@schedule(job=weather_type_load_job,
+          cron_schedule="0 12 * * 4",
+          execution_timezone="GMT")
+def update_weather_data_type_schedule(context: ScheduleEvaluationContext):
     return RunRequest()
 
 

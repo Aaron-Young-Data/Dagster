@@ -13,6 +13,7 @@ from .assets.f1_predictor.dim_event import *
 from .assets.f1_predictor.dim_compound import *
 from .assets.data_analytics.create_analytics_all_session_data import *
 from .assets.data_analytics.create_dim_track_status import *
+from .assets.f1_predictor.dim_weather_type import *
 from .partitions import daily_partitions
 
 create_weather_forcast_table_job = define_asset_job("create_weather_forcast_table_job",
@@ -20,7 +21,11 @@ create_weather_forcast_table_job = define_asset_job("create_weather_forcast_tabl
                                                     description="Create weather forcast data table")
 
 create_dim_location_table_job = define_asset_job("create_dim_location_table_job",
-                                                    selection=AssetSelection.assets(create_dim_track),
+                                                    selection=AssetSelection.assets(create_dim_location),
+                                                    description="Create dim location data table")
+
+create_dim_weather_type_table_job = define_asset_job("create_dim_weather_type_table_job",
+                                                    selection=AssetSelection.assets(create_dim_weather_type),
                                                     description="Create dim location data table")
 
 create_weather_forcast_view_job = define_asset_job("create_weather_forcast_view_job",
