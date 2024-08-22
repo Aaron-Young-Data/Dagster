@@ -139,7 +139,7 @@ def weather_forecast_to_sql(context, get_weather_forecast_data: pd.DataFrame):
                        'precipprob': 'PRECIPITATION_PROB',
                        'windspeed': 'WIND_SPEED',
                        'winddir': 'WIND_DIRECTION',
-                       'cloudcover': 'CLOUD_COVER',
+                       'cloudcover': 'WEATHER_TYPE_CD',
                        'conditions': 'CONDITIONS',
                        'source': 'FCST_SOURCE'},
               inplace=True)
