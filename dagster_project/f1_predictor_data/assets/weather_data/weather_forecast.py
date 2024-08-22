@@ -139,8 +139,8 @@ def weather_forecast_to_sql(context, get_weather_forecast_data: pd.DataFrame):
                        'precipprob': 'PRECIPITATION_PROB',
                        'windspeed': 'WIND_SPEED',
                        'winddir': 'WIND_DIRECTION',
-                       'cloudcover': 'WEATHER_TYPE_CD',
-                       'conditions': 'CONDITIONS',
+                       'cloudcover': 'CLOUD_COVER',
+                       'conditions': 'WEATHER_TYPE_CD',
                        'source': 'FCST_SOURCE'},
               inplace=True)
     df.loc[:, 'LOAD_TS'] = load_date
