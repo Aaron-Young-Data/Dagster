@@ -7,7 +7,7 @@ import fastf1
 import os
 from resources.sql_io_manager import MySQLDirectConnection
 from utils.discord_utils import DiscordUtils
-
+from utils.file_utils import FileUtils
 
 data_loc = os.getenv('DATA_STORE_LOC')
 user = os.getenv('SQL_USER')
@@ -18,7 +18,7 @@ server = os.getenv('SQL_SERVER')
 tableau_data_loc = os.getenv('TABLEAU_DATA_LOC')
 
 
-@sensor(job=create_prediction_job, minimum_interval_seconds=300)
+@sensor(job=create_prediction_job, minimum_interval_seconds=30)
 def create_prediction_job_sensor(context):
     if context.cursor == str(date.today()):
         return SkipReason("Sensor has already run today")
@@ -35,63 +35,49 @@ def create_prediction_job_sensor(context):
     # this find the closes race in the calendar
     closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
 
-    # check the race weekend type
+    closest_race['EventDate'] = pd.to_datetime(closest_race['EventDate'])
+    event_name = closest_race['EventName']
+    event_year = closest_race['EventDate'].year
+
     if closest_race['EventFormat'] == 'conventional':
-        # get the session start time
-        session_time = datetime.strptime(closest_race['Session3DateUtc'],
-                                         '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.utc)
+        closest_race['Session3DateUtc'] = pd.to_datetime(closest_race['Session3DateUtc'])
+        session = closest_race['Session3']
+        if closest_race['Session3DateUtc'].date() != utc_dt.date():
+            return SkipReason(f'{event_name} - {session} is not today')
+    else:
+        closest_race['Session1DateUtc'] = pd.to_datetime(closest_race['Session1DateUtc'])
+        session = closest_race['Session1']
+        if closest_race['Session1DateUtc'].date() != utc_dt.date():
+            return SkipReason(f'{event_name} - {session} is not today')
 
-        # add 1.5 hours to the session start time 1 hour for the session 30 mins for the data to be available
-        session_time_modified = (session_time + timedelta(hours=1.5)).replace(tzinfo=pytz.utc)
+    event_name = closest_race['EventName']
+    event_year = closest_race['EventDate'].year
 
-        # check if we are after the needed session + 1hr
-        if session_time_modified < utc_dt:
-            # attempts to collect data and load it
-            try:
-                session_data = fastf1.get_session(year=naive.year,
-                                                  gp=int(closest_race['RoundNumber']),
-                                                  identifier='Practice 3').load()
-            except KeyError:
-                return SkipReason("Session data is not available")
-            # update cursor to current data to only allow one run be to done daily
-            context.update_cursor(str(date.today()))
-            # run the prediction job with event info config
-            return RunRequest(
-                run_config={'ops': {'session_info': {"config": {'event_type': closest_race['EventFormat'],
-                                                                'event_name': closest_race['EventName'],
-                                                                'year': naive.year
-                                                                }}}}
-            )
-        else:
-            return SkipReason("It is not 30 mins after the session")
-    elif closest_race['EventFormat'] != 'conventional':
-        # get the session start time
-        session_time = datetime.strptime(closest_race['Session1DateUtc'],
-                                         '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.utc)
+    query = FileUtils.file_to_query('prediction_job_sensor')
 
-        # add 1.5 hours to the session start time 1 hour for the session 30 mins for the data to be available
-        session_time_modified = (session_time + timedelta(hours=1.5)).replace(tzinfo=pytz.utc)
+    query_modified = query.replace('{event_name}', event_name)
+    query_modified = query_modified.replace('{event_year}', str(event_year))
+    query_modified = query_modified.replace('{session}', session)
 
-        # check if we are after the needed session + 1hr
-        if session_time_modified < utc_dt:
-            try:
-                session_data = fastf1.get_session(year=naive.year,
-                                                  gp=int(closest_race['RoundNumber']),
-                                                  identifier='Practice 1').load()
-            except KeyError:
-                return SkipReason("Session data is not available")
-            context.update_cursor(str(date.today()))
-            return RunRequest(
-                run_config={'ops': {'session_info': {"config": {'event_type': closest_race['EventFormat'],
-                                                                'event_name': closest_race['EventName'],
-                                                                'year': naive.year
-                                                                }}}}
-            )
-        else:
-            return SkipReason("It is not 30 mins after the session")
+    con = MySQLDirectConnection(port, database, user, password, server)
+
+    df = con.run_query(query=query_modified)
+
+    row_count = int(df['RowCount'].iloc[0])
+
+    if row_count != 0:
+        context.update_cursor(str(date.today()))
+        return RunRequest(
+            run_config={'ops': {'session_info': {"config": {'event_type': closest_race['EventFormat'],
+                                                            'event_name': closest_race['EventName'],
+                                                            'year': naive.year
+                                                            }}}}
+        )
+    else:
+        return SkipReason(f"Data is not available for {event_name} - {session} in MySQL database yet")
 
 
-@sensor(job=evaluate_prediction_job, minimum_interval_seconds=300)
+@sensor(job=evaluate_prediction_job, minimum_interval_seconds=30)
 def evaluate_prediction_job_sensor(context):
     if context.cursor == str(date.today()):
         return SkipReason("Sensor has already run today")
@@ -108,66 +94,76 @@ def evaluate_prediction_job_sensor(context):
     # this find the closes race in the calendar
     closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
 
-    # get the next qualifying section date
-    quali_dt = pd.to_datetime(closest_race['Session4DateUtc']).date()
+    closest_race['EventDate'] = pd.to_datetime(closest_race['EventDate'])
+    closest_race['Session4DateUtc'] = pd.to_datetime(closest_race['Session4DateUtc'])
 
-    # check if it is qualifying day
-    if quali_dt != date.today():
-        return SkipReason(f'Qualifying is not today! Next qualifying session dt: {quali_dt}')
+    event_name = closest_race['EventName']
+    event_year = closest_race['EventDate'].year
 
-    # get the session start time
-    session_time = datetime.strptime(closest_race['Session4DateUtc'],
-                                     '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.utc)
+    if closest_race['Session4DateUtc'].date() != utc_dt.date():
+        return SkipReason(f'{event_name} - Qualifying is not today')
 
-    # add 1.5 hours to the session start time 1 hour for the session 30 mins for the data to be available
-    session_time_modified = (session_time + timedelta(hours=1.5)).replace(tzinfo=pytz.utc)
+    query = FileUtils.file_to_query('prediction_eval_job_sensor')
 
-    # check if we are after the needed session + 30 mins
-    if session_time_modified < utc_dt:
-        # attempts to collect data and load it
-        try:
-            session_data = fastf1.get_session(year=naive.year,
-                                              gp=int(closest_race['RoundNumber']),
-                                              identifier='Q').load()
-        except KeyError:
-            return SkipReason("Session data is not available")
-        # update cursor to current data to only allow one run be to done daily
+    query_modified = query.replace('{event_name}', event_name)
+    query_modified = query_modified.replace('{event_year}', str(event_year))
+
+    con = MySQLDirectConnection(port, database, user, password, server)
+
+    df = con.run_query(query=query_modified)
+
+    row_count = int(df['RowCount'].iloc[0])
+
+    if row_count != 0:
         context.update_cursor(str(date.today()))
-        # run the prediction job with event info config
         return RunRequest(
             run_config={'ops': {'quali_session_info': {"config": {'event_name': closest_race['EventName'],
                                                                   'year': naive.year
                                                                   }}}}
         )
     else:
-        return SkipReason("It is not 30 mins after the session")
+        return SkipReason(f"Qualifying data is not available for {event_name} in MySQL database yet")
 
 
-@sensor(job=create_dnn_model_job, minimum_interval_seconds=300)
+@sensor(job=create_dnn_model_job, minimum_interval_seconds=30)
 def create_dnn_model_sensor(context):
+    if context.cursor == str(date.today()):
+        return SkipReason("Sensor has already run today")
 
-    monitored_jobs = [
-        "weekend_session_data_load_job"
-    ]
+    # load calender csv into dataframe updated weekly by update_calender_job
+    calendar = pd.read_csv(f"{data_loc}calender.csv")
 
-    last_cursor = context.cursor or "0"
-    last_timestamp = datetime.fromtimestamp(float(last_cursor))
+    # convert GMT to UTC as calendar data is in UTC
+    time_zone = pytz.timezone("GMT")
+    naive = datetime.today()
+    local_dt = time_zone.localize(naive, is_dst=None)
+    utc_dt = local_dt.astimezone(pytz.utc)
 
-    for job_name in monitored_jobs:
-        run_records = context.instance.get_run_records(
-            filters=RunsFilter(
-                job_name="weekend_session_data_load_job",
-                statuses=[DagsterRunStatus.SUCCESS],
-                updated_after=last_timestamp
-            ),
-            order_by="update_timestamp",
-            ascending=False,
-        )
+    # this find the closes race in the calendar
+    closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
 
-        if not run_records:
-            return SkipReason(
-                f"Job {job_name} has not completed successfully since {last_timestamp}"
-            )
+    closest_race['EventDate'] = pd.to_datetime(closest_race['EventDate'])
+    closest_race['Session4DateUtc'] = pd.to_datetime(closest_race['Session4DateUtc'])
 
-    context.update_cursor(str(datetime.utcnow().timestamp()))
-    return RunRequest()
+    event_name = closest_race['EventName']
+    event_year = closest_race['EventDate'].year
+
+    if closest_race['Session4DateUtc'].date() != utc_dt.date():
+        return SkipReason(f'{event_name} - Qualifying is not today')
+
+    query = FileUtils.file_to_query('prediction_eval_job_sensor')
+
+    query_modified = query.replace('{event_name}', event_name)
+    query_modified = query_modified.replace('{event_year}', str(event_year))
+
+    con = MySQLDirectConnection(port, database, user, password, server)
+
+    df = con.run_query(query=query_modified)
+
+    row_count = int(df['RowCount'].iloc[0])
+
+    if row_count != 0:
+        context.update_cursor(str(date.today()))
+        return RunRequest()
+    else:
+        return SkipReason(f"Qualifying data is not available for {event_name} in MySQL database yet")

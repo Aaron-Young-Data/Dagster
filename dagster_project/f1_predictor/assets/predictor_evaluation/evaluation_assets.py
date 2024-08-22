@@ -6,85 +6,111 @@ from dagster import asset, Output, MetadataValue
 from fast_f1_functions.collect_data import *
 import fastf1.plotting
 import matplotlib.pyplot as plt
+from resources.sql_io_manager import MySQLDirectConnection
+from utils.file_utils import FileUtils
+
 
 get_data = GetData()
 clean = CleanData()
 
 data_loc = os.getenv('DATA_STORE_LOC')
+user = os.getenv('SQL_USER')
+password = os.getenv('SQL_PASSWORD')
+database = os.getenv('DATABASE')
+port = os.getenv('SQL_PORT')
+server = os.getenv('SQL_SERVER')
 
 
 @asset(config_schema={'event_name': str, 'year': int})
 def quali_session_info(context):
     event_name = context.op_config['event_name']
     year = context.op_config['year']
-    return Output(value={'event_name': event_name,
-                         'year': year},
-                  metadata={'event_name': event_name,
-                            'year': year}
-                  )
 
-@asset()
-def get_quali_session_data(context, quali_session_info: dict):
-    event_name = quali_session_info['event_name']
-    year = quali_session_info['year']
-    session_data = get_data.session_data(year=year,
-                                         location=event_name,
-                                         session='Q')
-    fastest_laps = get_data.fastest_laps(session_data=session_data)
-    fastest_laps = clean.order_laps_delta(fastest_laps)
-    needed_data = fastest_laps[['DriverNumber', 'Driver', 'LapTime', 'Final_POS']]
-    session_df = clean.time_cols_to_seconds(column_names=['LapTime'],
-                                            dataframe=needed_data)
+    query = f'''
+    SELECT
+        EVENT_CD
+    FROM DIM_EVENT 
+    WHERE 
+        EVENT_YEAR = {year} 
+        AND EVENT_NAME = '{event_name}'
+    '''
 
-    return Output(value=session_df,
-                  metadata={
-                      'Markdown': MetadataValue.md(session_df.head().to_markdown()),
-                      'Rows': len(session_df)
+    con = MySQLDirectConnection(port, database, user, password, server)
+    df = con.run_query(query=query)
+
+    event_cd = df['EVENT_CD'].iloc[0]
+
+    return Output(
+        value={'event_name': event_name,
+               'year': year,
+               'event_cd': event_cd
+               },
+        metadata={'event_name': event_name,
+                  'year': year,
+                  'event_cd': event_cd
                   }
-                  )
+    )
+
+@asset()
+def quali_session_data_from_sql(context, quali_session_info: dict):
+    event_cd = quali_session_info['event_cd']
+
+    query = FileUtils.file_to_query('sql_quali_session_data')
+
+    query = query.replace('{event_cd}', str(event_cd))
+
+    con = MySQLDirectConnection(port, database, user, password, server)
+    df = con.run_query(query=query)
+
+    return Output(
+        value=df,
+        metadata={'Markdown': MetadataValue.md(df.head().to_markdown()),
+                  'Rows': len(df)
+                  }
+    )
 
 
 @asset()
-def evaluate_prediction_dataframe(context, get_quali_session_data: pd.DataFrame, create_prediction: pd.DataFrame):
-    quali_df = get_quali_session_data
+def evaluate_prediction_dataframe(context, quali_session_data_from_sql: pd.DataFrame, create_prediction: pd.DataFrame):
+    quali_df = quali_session_data_from_sql
     predict_df = create_prediction
 
-    quali_df['DriverNumber'] = quali_df['DriverNumber'].astype(float)
+    quali_df['DRIVER'] = quali_df['DRIVER'].astype(str)
     predict_df['predicted_time'] = predict_df['predicted_time'].astype(float).round(3)
 
-    quali_df.rename({'LapTime': 'Actual_LapTime', 'Final_POS': 'Actual_POS'}, axis=1, inplace=True)
+    quali_df.rename({'LAPTIME': 'Actual_LapTime', 'FINAL_POS': 'Actual_POS'}, axis=1, inplace=True)
     predict_df.rename({'predicted_time': 'Predicted_LapTime'}, axis=1, inplace=True)
-    df = pd.merge(quali_df, predict_df, left_on='DriverNumber', right_on='drv_no')
+    df = pd.merge(quali_df, predict_df, on='DRIVER')
 
     df['LapTime_Dif'] = df['Actual_LapTime'] - df['Predicted_LapTime']
     df['POS_Dif'] = df['Actual_POS'] - df['Predicted_POS']
 
-    return Output(value=df,
-                  metadata={
-                      'Markdown': MetadataValue.md(df.head().to_markdown()),
-                      'Rows': len(df)
-                  }
-                  )
+    return Output(
+        value=df,
+        metadata={'Markdown': MetadataValue.md(df.head().to_markdown()),
+                  'Rows': len(df)
+                 }
+    )
 
 
 @asset()
 def evaluate_prediction_graph(context, evaluate_prediction_dataframe: pd.DataFrame, quali_session_info: dict):
     event_name = quali_session_info['event_name']
     year = quali_session_info['year']
-    file_name = str(quali_session_info['event_name']) + '_' + str(quali_session_info['year']) + '.png'
+    file_name = str(quali_session_info['event_name'].replace(' ', '_')) + '_' + str(quali_session_info['year']) + '.png'
 
     df = evaluate_prediction_dataframe
 
     fig, ax = plt.subplots(figsize=(8, 8))
     colours = dict()
-    for driver in df['Driver'].to_list():
-        colours.update({driver: fastf1.plotting.driver_color(driver)})
+    for driver in df['DRIVER'].to_list():
+        colours.update({driver: fastf1.plotting.driver_color(driver[:3])})
 
     sns.scatterplot(data=df,
                     x="LapTime_Dif",
                     y="POS_Dif",
                     ax=ax,
-                    hue="Driver",
+                    hue="DRIVER",
                     palette=colours,
                     s=80,
                     linewidth=1,
@@ -104,7 +130,7 @@ def evaluate_prediction_graph(context, evaluate_prediction_dataframe: pd.DataFra
                     y="Actual_POS",
                     x="Predicted_POS",
                     ax=ax,
-                    hue="Driver",
+                    hue="DRIVER",
                     palette=colours,
                     s=80,
                     linewidth=1,

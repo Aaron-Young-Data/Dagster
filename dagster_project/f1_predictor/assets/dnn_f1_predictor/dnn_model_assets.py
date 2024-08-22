@@ -23,8 +23,8 @@ server = os.getenv('SQL_SERVER')
 
 
 @asset()
-def dnn_clean_data_from_sql(context):
-    query = FileUtils.file_to_query('sql_dnn_model_clean_data')
+def dnn_training_data_from_sql(context):
+    query = FileUtils.file_to_query('sql_dnn_model_training_data')
     con = MySQLDirectConnection(port, database, user, password, server)
     df = con.run_query(query=query)
     df = df.astype(float)
@@ -40,9 +40,9 @@ def dnn_clean_data_from_sql(context):
 @multi_asset(
     outs={'test_data': AssetOut(), 'train_data': AssetOut()}
 )
-def test_train_split(context, dnn_clean_data_from_sql: pd.DataFrame):
-    df = dnn_clean_data_from_sql
-    train_data = df.sample(frac=0.8, random_state=0)
+def test_train_split(context, dnn_training_data_from_sql: pd.DataFrame):
+    df = dnn_training_data_from_sql
+    train_data = df.sample(frac=0.9, random_state=0)
     test_data = df.drop(train_data.index)
 
     yield Output(
@@ -66,7 +66,7 @@ def test_train_split(context, dnn_clean_data_from_sql: pd.DataFrame):
 @asset()
 def build_dnn_model(context, train_data: pd.DataFrame):
     train_features = train_data.copy()
-    train_features.pop('LapTimeQ')
+    train_features.pop('LAPTIME_Q')
 
     normalizer = tf.keras.layers.Normalization(axis=-1)
     normalizer.adapt(np.array(train_features))
@@ -93,7 +93,7 @@ def train_dnn_model(context, build_dnn_model: Sequential, train_data: pd.DataFra
     dnn_model = build_dnn_model
 
     train_features = train_data.copy()
-    train_labels = train_features.pop('LapTimeQ')
+    train_labels = train_features.pop('LAPTIME_Q')
 
     history = dnn_model.fit(
         train_features,
@@ -121,7 +121,7 @@ def evaluate_dnn_model(context,
     dnn_model = train_dnn_model_history
 
     test_features = test_data.copy()
-    test_labels = test_features.pop('LapTimeQ')
+    test_labels = test_features.pop('LAPTIME_Q')
 
     test_predictions = train_dnn_model.predict(test_features, verbose=0).flatten()
 
@@ -130,7 +130,7 @@ def evaluate_dnn_model(context,
     plt.plot(dnn_model.history['val_loss'], label='val_loss')
     plt.ylim([0, 10])
     plt.xlabel('Epoch')
-    plt.ylabel('Error [LapTimeQ]')
+    plt.ylabel('Error [LAPTIME_Q]')
     plt.legend()
     plt.grid(True)
 
@@ -141,8 +141,8 @@ def evaluate_dnn_model(context,
     a = plt.axes(aspect='equal')
     plt.title('Prediction vs Actual Values')
     plt.scatter(test_labels, test_predictions)
-    plt.xlabel('True Values [LapTimeQ]')
-    plt.ylabel('Predictions [LapTimeQ]')
+    plt.xlabel('True Values [LAPTIME_Q]')
+    plt.ylabel('Predictions [LAPTIME_Q]')
     lims = [0, 150]
     plt.xlim(lims)
     plt.ylim(lims)
@@ -154,7 +154,7 @@ def evaluate_dnn_model(context,
 
     error = test_predictions - test_labels
     plt.hist(error, bins=25)
-    plt.xlabel('Prediction Error [LapTimeQ]')
+    plt.xlabel('Prediction Error [LAPTIME_Q]')
     _ = plt.ylabel('Count')
 
     plt.savefig(save_loc + '_predict_error_cnt.png')

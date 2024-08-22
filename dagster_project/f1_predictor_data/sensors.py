@@ -7,6 +7,7 @@ import fastf1
 import os
 from resources.sql_io_manager import MySQLDirectConnection
 from utils.file_utils import FileUtils
+
 data_loc = os.getenv('DATA_STORE_LOC')
 user = os.getenv('SQL_USER')
 password = os.getenv('SQL_PASSWORD')
@@ -16,11 +17,8 @@ server = os.getenv('SQL_SERVER')
 tableau_data_loc = os.getenv('TABLEAU_DATA_LOC')
 
 
-@sensor(job=weekend_session_data_load_job, minimum_interval_seconds=300)
-def weekend_session_data_load_job_sensor(context):
-    if context.cursor == str(date.today()):
-        return SkipReason("Sensor has already run today")
-
+@sensor(job=session_data_load_job, minimum_interval_seconds=30)
+def session_data_load_job_sensor(context):
     # load calender csv into dataframe updated weekly by update_calender_job
     calendar = pd.read_csv(f"{data_loc}calender.csv")
 
@@ -33,44 +31,54 @@ def weekend_session_data_load_job_sensor(context):
     # this find the closes race in the calendar
     closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
 
-    # get the next qualifying section date
-    quali_dt = pd.to_datetime(closest_race['Session4DateUtc']).date()
+    if closest_race['EventFormat'] == 'conventional':
+        session_list = ['Session1', 'Session2', 'Session3', 'Session4']
+    else:
+        session_list = ['Session1', 'Session4']
 
-    # check if it is qualifying day
-    if quali_dt != date.today():
-        return SkipReason(f'Qualifying is not today! Next qualifying session dt: {quali_dt}')
+    session_df = pd.DataFrame()
+    for session in session_list:
+        session_df = pd.concat([session_df,
+                                pd.DataFrame({'session_num': [session],
+                                              'session_time': [closest_race[f'{session}DateUtc']],
+                                              'session_name': [closest_race[session]]})],
+                               ignore_index=True)
 
-    # get the session start time
-    session_time = datetime.strptime(closest_race['Session4DateUtc'],
-                                     '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.utc)
+    session_df['session_time'] = pd.to_datetime(session_df['session_time'])
 
-    # add 1.5 hours to the session start time 1 hour for the session 30 mins for the data to be available
+    next_session = session_df[session_df['session_time'].dt.tz_localize('UTC') > utc_dt - timedelta(hours=3)].iloc[0]
+
+    if next_session['session_time'].date() != utc_dt.date():
+        return SkipReason(f'{closest_race["EventName"]} - {next_session["session_name"]} is not today! Next session dt:'
+                          f' {next_session["session_time"].date()}')
+
+    if context.cursor == next_session['session_name']:
+        return SkipReason(f"{closest_race['EventName']} - {next_session['session_name']} has already been loaded!")
+
+    session_time = next_session['session_time'].replace(tzinfo=pytz.utc)
+
     session_time_modified = (session_time + timedelta(hours=1.5)).replace(tzinfo=pytz.utc)
 
-    # check if we are after the needed session + 30 mins
     if session_time_modified < utc_dt:
-        # attempts to collect data and load it
         try:
             session_data = fastf1.get_session(year=naive.year,
                                               gp=int(closest_race['RoundNumber']),
-                                              identifier='Q').load()
+                                              identifier=next_session['session_name']).load()
         except KeyError:
             return SkipReason("Session data is not available")
-        # update cursor to current data to only allow one run be to done daily
-        context.update_cursor(str(date.today()))
-        # run the prediction job with event info config
+        context.update_cursor(next_session['session_name'])
         return RunRequest(
-            run_config={'ops': {'get_session_data_weekend': {"config": {'event_type': closest_race['EventFormat'],
-                                                                        'event_name': closest_race['EventName'],
-                                                                        'year': naive.year
-                                                                        }}}}
+            run_config={'ops': {'get_session_data': {"config": {'session': next_session['session_name'],
+                                                                'event_name': closest_race['EventName'],
+                                                                'year': naive.year
+                                                                }}}}
         )
     else:
         return SkipReason("It is not 30 mins after the session")
 
 
-@sensor(job=session_data_load_job, minimum_interval_seconds=300)
-def session_data_load_job_sensor(context):
+@sensor(job=full_session_data_load_job, minimum_interval_seconds=30)
+def full_session_data_load_job_sensor(context):
     today = date.today()
     year = today.year
     year_list = list(range(2018, year + 1))
@@ -81,7 +89,7 @@ def session_data_load_job_sensor(context):
         query = FileUtils.file_to_query('session_data_sensor')
         con = MySQLDirectConnection(port, database, user, password, server)
         df = con.run_query(query=query)
-        row_count = int(df['RowCount'])
+        row_count = int(df['RowCount'].iloc[0])
         if row_count == 0:
             return RunRequest(
                 job_name='session_data_load_job',
@@ -92,4 +100,3 @@ def session_data_load_job_sensor(context):
             return SkipReason(f'Current row count: {int(row_count)}')
     else:
         return SkipReason('Job is already running!')
-

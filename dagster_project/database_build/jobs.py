@@ -6,17 +6,31 @@ from .assets import *
 from .assets.f1_predictor.weather_data import *
 from .assets.f1_predictor.dim_track_event import *
 from .assets.f1_predictor.dim_track import *
-from .assets.f1_predictor.raw_session_data import *
+from .assets.f1_predictor.dim_location import *
+from .assets.f1_predictor.session_data import *
 from .assets.f1_predictor.f1_calender import *
 from .assets.f1_predictor.dim_event import *
 from .assets.f1_predictor.dim_compound import *
 from .assets.data_analytics.create_analytics_all_session_data import *
 from .assets.data_analytics.create_dim_track_status import *
+from .assets.f1_predictor.dim_weather_type import *
 from .partitions import daily_partitions
 
 create_weather_forcast_table_job = define_asset_job("create_weather_forcast_table_job",
-                                                    selection=AssetSelection.assets(create_weather_forcast),
+                                                    selection=AssetSelection.assets(create_weather_forcast_prod),
                                                     description="Create weather forcast data table")
+
+create_dim_location_table_job = define_asset_job("create_dim_location_table_job",
+                                                    selection=AssetSelection.assets(create_dim_location),
+                                                    description="Create dim location data table")
+
+create_dim_weather_type_table_job = define_asset_job("create_dim_weather_type_table_job",
+                                                    selection=AssetSelection.assets(create_dim_weather_type),
+                                                    description="Create dim location data table")
+
+create_weather_forcast_view_job = define_asset_job("create_weather_forcast_view_job",
+                                                    selection=AssetSelection.assets(create_weather_forcast_dev),
+                                                    description="Create weather forcast data view")
 
 create_dim_track_table_job = define_asset_job("create_dim_track_table_job",
                                                selection=AssetSelection.assets(create_dim_track),
@@ -26,9 +40,13 @@ create_dim_track_event_table_job = define_asset_job("create_dim_track_event_tabl
                                                selection=AssetSelection.assets(create_dim_track_event),
                                                description="Create track data table")
 
-create_raw_session_data_table_job = define_asset_job("create_raw_session_data_table_job",
-                                                     selection=AssetSelection.assets(create_raw_session_data),
-                                                     description="Create raw session data table")
+create_session_data_table_job = define_asset_job("create_session_data_table_job",
+                                                     selection=AssetSelection.assets(create_session_data),
+                                                     description="Create session data table")
+
+create_cleaned_session_data_table_job = define_asset_job("create_cleaned_session_data_view_job",
+                                                     selection=AssetSelection.assets(create_cleaned_session_data),
+                                                     description="Create cleaned session data view")
 
 create_f1_calender_table_job = define_asset_job("create_f1_calender_table_job",
                                                 selection=AssetSelection.assets(create_f1_calender),

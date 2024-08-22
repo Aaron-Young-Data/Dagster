@@ -13,3 +13,6 @@ tensorflow
 mysql-connector-python
 matplotlib
 numpy
+openmeteo-requests
+requests-cache
+retry-requests
