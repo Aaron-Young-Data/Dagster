@@ -57,7 +57,7 @@ def session_data_load_job_sensor(context):
 
     session_time = next_session['session_time']
 
-    session_time_modified = (session_time + timedelta(hours=1.5))
+    session_time_modified = (session_time + timedelta(hours=1.5)).replace(tzinfo=pytz.utc)
 
     if session_time_modified < utc_dt:
         try:
