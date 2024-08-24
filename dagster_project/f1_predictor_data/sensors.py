@@ -55,9 +55,9 @@ def session_data_load_job_sensor(context):
     if context.cursor == next_session['session_name']:
         return SkipReason(f"{closest_race['EventName']} - {next_session['session_name']} has already been loaded!")
 
-    session_time = next_session['session_time'].replace(tzinfo=pytz.utc)
+    session_time = next_session['session_time']
 
-    session_time_modified = (session_time + timedelta(hours=1.5)).replace(tzinfo=pytz.utc)
+    session_time_modified = (session_time + timedelta(hours=1.5))
 
     if session_time_modified < utc_dt:
         try:
