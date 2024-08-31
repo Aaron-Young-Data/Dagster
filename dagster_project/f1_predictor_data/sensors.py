@@ -46,7 +46,10 @@ def session_data_load_job_sensor(context):
 
     session_df['session_time'] = pd.to_datetime(session_df['session_time'])
 
-    next_session = session_df[session_df['session_time'].dt.tz_localize('UTC') > utc_dt - timedelta(hours=3)].iloc[0]
+    try:
+        next_session = session_df[session_df['session_time'].dt.tz_localize('UTC') > utc_dt - timedelta(hours=3)].iloc[0]
+    except IndexError:
+        return SkipReason(f'All sessions have been loaded for {closest_race["EventName"]}')
 
     if next_session['session_time'].date() != utc_dt.date():
         return SkipReason(f'{closest_race["EventName"]} - {next_session["session_name"]} is not today! Next session dt:'
