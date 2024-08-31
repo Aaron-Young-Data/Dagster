@@ -141,7 +141,6 @@ def create_prediction(context, create_prediction_model: LinearRegression, sessio
         predicted_time = lr.predict(temp.drop(['DRIVER'], axis=1))
         vals['DRIVER'] = temp['DRIVER']
         vals['predicted_time'] = predicted_time
-        print('test')
         predict_df = pd.concat([predict_df, vals])
 
     predict_df = predict_df.sort_values('predicted_time')
