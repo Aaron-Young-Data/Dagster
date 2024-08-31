@@ -137,7 +137,7 @@ def evaluate_prediction_graph(context, evaluate_prediction_dataframe: pd.DataFra
                     legend='auto',
                     edgecolor='black')
 
-    ax.plot((0, 0), (20, 20), ls="dotted", c='black')
+    ax.plot([0, 20], [0, 20], ls="dotted", c='black')
     ax.invert_yaxis()
 
     plt.suptitle(f"{event_name} {year} Qualifying - Actual vs Predicted position (Closer to the line better)\n")
