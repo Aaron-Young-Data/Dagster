@@ -82,6 +82,7 @@ class SQLIOManager(ConfigurableIOManager):
         col_list = ', '.join(columns) if columns else '*'
         return f'SELECT {col_list} FROM {schema}.{table}'
 
+
 class MySQLDirectConnection:
     def __init__(self, port, database, user, password, server):
         self.port = port
@@ -95,7 +96,7 @@ class MySQLDirectConnection:
         self.conn = self.engine.connect()
 
         self.cursor_conn = mysql.connector.connect(
-            user=user, password=password, host=server, database=database
+            user=user, password=password, host=server, database=database, port=port
         )
 
         self.cursor = self.cursor_conn.cursor()

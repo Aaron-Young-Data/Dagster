@@ -1,6 +1,6 @@
-DROP TABLE IF EXISTS f1_calender;
+DROP TABLE IF EXISTS F1_CALENDER;
 
-create table f1_calender (
+create table F1_CALENDER (
 RoundNumber INT,
 EventDate DATETIME,
 EventName  VARCHAR(30),

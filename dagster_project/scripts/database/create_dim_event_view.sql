@@ -1,6 +1,6 @@
-DROP VIEW IF EXISTS dim_event;
+DROP VIEW IF EXISTS DIM_EVENT;
 
-CREATE VIEW dim_event AS (
+CREATE VIEW DIM_EVENT AS (
     SELECT 
         CONCAT(YEAR(cldr.EventDate), cldr.RoundNumber) AS EVENT_CD,
         cldr.RoundNumber AS ROUND_NUMBER,
