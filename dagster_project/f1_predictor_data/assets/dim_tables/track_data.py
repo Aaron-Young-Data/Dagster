@@ -22,7 +22,7 @@ def get_track_data_csv(context):
                   })
 
 
-@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'dim_track', 'cleanup'])
+@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'DIM_TRACK', 'cleanup'])
 def track_data_to_sql(context, get_track_data_csv: pd.DataFrame):
     df = get_track_data_csv
     return Output(
@@ -43,7 +43,7 @@ def get_track_event_data_csv(context):
                   })
 
 
-@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'dim_track_event', 'cleanup'])
+@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'DIM_TRACK_EVENT', 'cleanup'])
 def track_event_data_to_sql(context, get_track_event_data_csv: pd.DataFrame):
     df = get_track_event_data_csv
     return Output(

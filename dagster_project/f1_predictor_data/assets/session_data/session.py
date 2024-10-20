@@ -92,7 +92,7 @@ def get_full_session_data(context):
     )
 
 
-@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'session_data', 'cleanup'])
+@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'SESSION_DATA', 'cleanup'])
 def full_session_data_to_sql(context, get_full_session_data: pd.DataFrame):
     df = get_full_session_data.rename(columns={
         'Driver': 'DRIVER',
@@ -174,7 +174,7 @@ def get_session_data(context):
     )
 
 
-@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'session_data'])
+@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'SESSION_DATA'])
 def session_data_to_sql(context, get_session_data: pd.DataFrame):
     df = get_session_data.rename(columns={
         'Driver': 'DRIVER',

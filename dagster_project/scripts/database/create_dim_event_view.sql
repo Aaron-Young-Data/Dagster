@@ -35,7 +35,7 @@ CREATE VIEW DIM_EVENT AS (
         cldr.Session4DateUtc AS SESSION_FOUR_DT,
         cldr.Session5 AS SESSION_FIVE_TYPE,
         cldr.Session5DateUtc AS SESSION_FIVE_DT
-    FROM f1_calender cldr
-    LEFT JOIN dim_track_event trk
+    FROM F1_CALENDER cldr
+    LEFT JOIN DIM_TRACK_EVENT trk
         ON CONCAT(YEAR(cldr.EventDate), cldr.RoundNumber) = trk.EVENT_CD
 )

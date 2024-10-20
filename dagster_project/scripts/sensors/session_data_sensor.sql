@@ -1,3 +1,3 @@
 SELECT
 count(*) AS RowCount
-FROM session_data;
+FROM SESSION_DATA;

@@ -19,7 +19,7 @@ def get_compound_data(context):
 
 
 
-@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'dim_compound', 'cleanup'])
+@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'DIM_COMPOUND', 'cleanup'])
 def compound_to_sql(context, get_compound_data: pd.DataFrame):
     df = get_compound_data
     return Output(

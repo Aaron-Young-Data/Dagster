@@ -22,7 +22,7 @@ def get_weather_type_csv(context):
                   })
 
 
-@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'dim_weather_type', 'cleanup'])
+@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'DIM_WEATHER_TYPE', 'cleanup'])
 def weather_type_to_sql(context, get_weather_type_csv: pd.DataFrame):
     df = get_weather_type_csv
     return Output(

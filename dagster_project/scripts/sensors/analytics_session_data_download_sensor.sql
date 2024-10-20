@@ -1,6 +1,6 @@
 SELECT
 COUNT(*) as RowCount
 FROM
-tableau_data.all_session_data
+TABLEAU_DATA.ALL_SESSION_DATA
 WHERE
 LapTime is not NULL

@@ -1,3 +1,3 @@
 SELECT
 count(*) AS RowCount
-FROM tableau_data.all_session_data;
+FROM TABLEAU_DATA.ALL_SESSION_DATA;

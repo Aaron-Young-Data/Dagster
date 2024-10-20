@@ -19,7 +19,7 @@ def get_location_data(context):
 
 
 
-@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'dim_location', 'cleanup'])
+@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'DIM_LOCATION', 'cleanup'])
 def location_to_sql(context, get_location_data: pd.DataFrame):
     df = get_location_data
     return Output(
