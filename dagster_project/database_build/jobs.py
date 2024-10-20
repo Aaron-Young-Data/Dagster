@@ -44,7 +44,7 @@ create_session_data_table_job = define_asset_job("create_session_data_table_job"
                                                      selection=AssetSelection.assets(create_session_data),
                                                      description="Create session data table")
 
-create_cleaned_session_data_table_job = define_asset_job("create_cleaned_session_data_view_job",
+create_cleaned_session_data_view_job = define_asset_job("create_cleaned_session_data_view_job",
                                                      selection=AssetSelection.assets(create_cleaned_session_data),
                                                      description="Create cleaned session data view")
 
