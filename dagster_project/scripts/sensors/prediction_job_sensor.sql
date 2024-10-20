@@ -1,6 +1,6 @@
 SELECT
 count(*) AS RowCount
-FROM session_data dat
+FROM SESSION_DATA dat
 JOIN DIM_EVENT evt
 	ON dat.EVENT_CD = evt.EVENT_CD
 WHERE

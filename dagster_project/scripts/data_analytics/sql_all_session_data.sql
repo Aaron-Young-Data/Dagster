@@ -31,8 +31,8 @@ a.event_name,
 a.year,
 a.event_type
 FROM
-tableau_data.all_session_data a
-LEFT JOIN tableau_data.dim_track_status b
+TABLEAU_DATA.ALL_SESSION_DATA a
+LEFT JOIN TABLEAU_DATA.DIM_TRACK_STATUS b
 ON a.TrackStatus = b.TrackStatus_cd
 WHERE
 LapTime is not NULL
