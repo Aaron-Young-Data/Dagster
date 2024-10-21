@@ -98,7 +98,7 @@ def get_data_analysis_session_data(context):
     )
 
 
-@asset(io_manager_key='sql_io_manager', key_prefix=['tableau_data', 'all_session_data', 'cleanup'])
+@asset(io_manager_key='sql_io_manager', key_prefix=['TABLEAU_DATA', 'ALL_SESSION_DATA', 'cleanup'])
 def data_analysis_session_data_to_sql(context, get_data_analysis_session_data: pd.DataFrame):
     df = get_data_analysis_session_data
     df['load_timestamp'] = datetime.today()
@@ -187,7 +187,7 @@ def get_data_analysis_weekend_session_data(context):
     )
 
 
-@asset(io_manager_key='sql_io_manager', key_prefix=['tableau_data', 'all_session_data', 'append'])
+@asset(io_manager_key='sql_io_manager', key_prefix=['TABLEAU_DATA', 'ALL_SESSION_DATA', 'append'])
 def data_analysis_weekend_session_data_to_sql(context, get_data_analysis_weekend_session_data: pd.DataFrame):
     df = get_data_analysis_weekend_session_data
     df['load_timestamp'] = datetime.today()

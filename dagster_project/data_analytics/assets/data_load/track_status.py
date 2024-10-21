@@ -17,7 +17,7 @@ def get_track_status_data_csv(context):
 
 
 
-@asset(io_manager_key='sql_io_manager', key_prefix=['tableau_data', 'dim_track_status', 'cleanup'])
+@asset(io_manager_key='sql_io_manager', key_prefix=['TABLEAU_DATA', 'DIM_TRACK_STATUS', 'cleanup'])
 def track_status_data_to_sql(context, get_track_status_data_csv: pd.DataFrame):
     df = get_track_status_data_csv
     return Output(
