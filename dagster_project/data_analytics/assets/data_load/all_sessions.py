@@ -174,9 +174,9 @@ def get_data_analysis_weekend_session_data(context):
             event_data = session_df
         else:
             event_data = pd.concat([event_data, session_df], ignore_index=True)
-    event_data['event_name'] = event_name
-    event_data['year'] = year
-    event_data['event_type'] = event_type
+    event_data['EVENT_NAME'] = event_name
+    event_data['YEAR'] = year
+    event_data['EVENT_TYPE'] = event_type
     return Output(
         value=event_data,
         metadata={
@@ -190,7 +190,34 @@ def get_data_analysis_weekend_session_data(context):
 @asset(io_manager_key='sql_io_manager', key_prefix=['TABLEAU_DATA', 'ALL_SESSION_DATA', 'append'])
 def data_analysis_weekend_session_data_to_sql(context, get_data_analysis_weekend_session_data: pd.DataFrame):
     df = get_data_analysis_weekend_session_data
-    df['load_timestamp'] = datetime.today()
+    df.rename(columns={'Driver': 'DRIVER',
+                       'DriverNumber': 'DRIVER_NUMBER',
+                       'Team': 'TEAM',
+                       'LapTime': 'LAP_TIME',
+                       'LapNumber': 'LAP_NUMBER',
+                       'Position': 'POSITION',
+                       'Stint': 'STINT',
+                       'TyreLife': 'TYRE_LIFE',
+                       'FreshTyre': 'FRESH_TYRE',
+                       'Sector1Time': 'SECTOR_1_TIME',
+                       'Sector2Time': 'SECTOR_2_TIME',
+                       'Sector3Time': 'SECTOR_3_TIME',
+                       'SpeedI1': 'SPEED_I1',
+                       'SpeedI2': 'SPEED_I2',
+                       'SpeedFL': 'SPEED_FL',
+                       'SpeedST': 'SPEED_ST',
+                       'IsPersonalBest': 'IS_PERSONAL_BEST',
+                       'Compound': 'COMPOUND',
+                       'Deleted': 'DELETED',
+                       'DeletedReason': 'DELETED_REASON',
+                       'AirTemp': 'AIR_TEMP',
+                       'Rainfall': 'RAINFALL',
+                       'TrackTemp': 'TRACK_TEMP',
+                       'WindDirection': 'WIND_DIRECTION',
+                       'WindSpeed': 'WIND_SPEED',
+                       'TrackStatus': 'TRACK_STATUS_CD',
+                       'IsAccurate': 'IS_ACCURATE'}, inplace=True)
+    df['LOAD_TS'] = datetime.today()
     return Output(
         value=df,
         metadata={
