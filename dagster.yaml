@@ -29,4 +29,5 @@ storage:
         env: SQL_SERVER
       db_name:
         env: LOG_DATABASE
-      port: 3306
+      port:
+        env: SQL_PORT

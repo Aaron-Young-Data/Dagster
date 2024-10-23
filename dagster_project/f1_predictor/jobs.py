@@ -30,7 +30,7 @@ evaluate_prediction_job = define_asset_job('evaluation_prediction_job',
                                                                   }}}})
 
 create_dnn_model_job = define_asset_job('create_dnn_model_job',
-                                        selection=AssetSelection.assets(dnn_clean_data_from_sql,
+                                        selection=AssetSelection.assets(dnn_training_data_from_sql,
                                                                         test_train_split,
                                                                         build_dnn_model,
                                                                         train_dnn_model,
@@ -43,12 +43,7 @@ create_dnn_model_job = define_asset_job('create_dnn_model_job',
 create_prediction_dnn_model_job = define_asset_job('create_prediction_dnn_model_job',
                                                    selection=AssetSelection.assets(load_dnn_model,
                                                                                    dnn_model_session_info,
-                                                                                   dnn_model_weather_forcast_from_sql,
-                                                                                   dnn_model_get_track_data_sql,
-                                                                                   dnn_model_get_new_session_data,
-                                                                                   dnn_model_clean_data,
-                                                                                   dnn_model_add_track_data,
-                                                                                   dnn_model_add_weather_forcast_data),
+                                                                                   dnn_model_session_data_sql),
                                                    description='Job to create an updated DNN model when new data is'
                                                                'available and outputs new model evaluation to discord',
                                                    config={'ops':

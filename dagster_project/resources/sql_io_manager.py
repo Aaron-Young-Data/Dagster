@@ -95,7 +95,7 @@ class MySQLDirectConnection:
         self.conn = self.engine.connect()
 
         self.cursor_conn = mysql.connector.connect(
-            user=user, password=password, host=server, database=database
+            user=user, password=password, host=server, database=database, port=port
         )
 
         self.cursor = self.cursor_conn.cursor()
