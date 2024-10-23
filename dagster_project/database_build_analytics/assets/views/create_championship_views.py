@@ -10,9 +10,10 @@ database = os.getenv('DATABASE')
 port = os.getenv('SQL_PORT')
 server = os.getenv('SQL_SERVER')
 
-@asset()
-def create_weather_forcast_prod(context):
-    query = FileUtils.file_to_query('create_weather_forecast_prod')
+
+@asset
+def create_drivers_championship_view(context):
+    query = FileUtils.file_to_query('create_analytics_agg_drivers_championship_result_vw')
     context.log.info(f'Query to run: \n{query}')
     con = MySQLDirectConnection(port, database, user, password, server)
     df = con.run_query_no_output(query=query)
@@ -20,9 +21,10 @@ def create_weather_forcast_prod(context):
         value=df
     )
 
-@asset()
-def create_weather_forcast_dev(context):
-    query = FileUtils.file_to_query('create_weather_forecast_dev')
+
+@asset
+def create_constructors_championship_view(context):
+    query = FileUtils.file_to_query('create_analytics_agg_constructors_championship_result_vw')
     context.log.info(f'Query to run: \n{query}')
     con = MySQLDirectConnection(port, database, user, password, server)
     df = con.run_query_no_output(query=query)
