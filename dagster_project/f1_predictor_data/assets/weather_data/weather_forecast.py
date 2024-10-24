@@ -127,7 +127,7 @@ def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame)
 
 
 @asset(io_manager_key='sql_io_manager',
-       key_prefix=['ml_project_prod', 'WEATHER_FORECAST', 'append'],
+       key_prefix=['ML_PROJECT_PROD', 'WEATHER_FORECAST', 'append'],
        partitions_def=weekly_partitions)
 def weather_forecast_to_sql(context, get_weather_forecast_data: pd.DataFrame):
     load_date = datetime.today()
