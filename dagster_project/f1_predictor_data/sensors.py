@@ -21,7 +21,6 @@ tableau_data_loc = os.getenv('TABLEAU_DATA_LOC')
 def session_data_load_job_sensor(context):
     # load calender csv into dataframe updated weekly by update_calender_job
     calendar = pd.read_csv(f"{data_loc}calender.csv")
-
     time_zone = pytz.timezone("GMT")
     naive = datetime.now()
     local_dt = time_zone.localize(naive, is_dst=False)
@@ -79,8 +78,8 @@ def session_data_load_job_sensor(context):
                                                                 }}}}
         )
     else:
-        return SkipReason(f"It is not 30 mins after the session, next session is on {session_time} what is "
-                          f"{(session_time - utc_now).total_seconds()} seconds away!")
+        return SkipReason(f"It is not 30 mins after the {next_session['session_name']}, next session is on "
+                          f"{session_time} what is {(session_time - utc_now).total_seconds()} seconds away!")
 
 
 @sensor(job=full_session_data_load_job, minimum_interval_seconds=30)
