@@ -22,12 +22,11 @@ def session_data_load_job_sensor(context):
     # load calender csv into dataframe updated weekly by update_calender_job
     calendar = pd.read_csv(f"{data_loc}calender.csv")
 
-    # convert GMT to UTC as calendar data is in UTC
     time_zone = pytz.timezone("GMT")
-    naive = datetime.today()
-    local_dt = time_zone.localize(naive, is_dst=None)
+    naive = datetime.now()
+    local_dt = time_zone.localize(naive, is_dst=False)
     utc_dt = local_dt.astimezone(pytz.utc)
-
+    utc_now = datetime.utcnow()
     # this find the closes race in the calendar
     closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
 
@@ -60,11 +59,11 @@ def session_data_load_job_sensor(context):
 
     session_time = next_session['session_time']
 
-    session_time_modified = (session_time + timedelta(hours=2.5)).replace(tzinfo=pytz.utc)
+    session_time_modified = (session_time + timedelta(hours=1.5))
 
-    if session_time_modified < utc_dt:
+    if session_time_modified < utc_now:
         try:
-            session_data = fastf1.get_session(year=naive.year,
+            session_data = fastf1.get_session(year=utc_now.year,
                                               gp=int(closest_race['RoundNumber']),
                                               identifier=next_session['session_name']).load()
         except KeyError:
@@ -76,11 +75,12 @@ def session_data_load_job_sensor(context):
         return RunRequest(
             run_config={'ops': {'get_session_data': {"config": {'session': next_session['session_name'],
                                                                 'event_name': closest_race['EventName'],
-                                                                'year': naive.year
+                                                                'year': utc_now.year
                                                                 }}}}
         )
     else:
-        return SkipReason("It is not 30 mins after the session")
+        return SkipReason(f"It is not 30 mins after the session, next session is on {session_time} what is "
+                          f"{(session_time - utc_now).total_seconds()} seconds away!")
 
 
 @sensor(job=full_session_data_load_job, minimum_interval_seconds=30)
