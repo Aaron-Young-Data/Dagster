@@ -60,7 +60,7 @@ def session_data_load_job_sensor(context):
 
     session_time = next_session['session_time']
 
-    session_time_modified = (session_time + timedelta(hours=1.5)).replace(tzinfo=pytz.utc)
+    session_time_modified = (session_time + timedelta(hours=2.5)).replace(tzinfo=pytz.utc)
 
     if session_time_modified < utc_dt:
         try:
@@ -69,6 +69,9 @@ def session_data_load_job_sensor(context):
                                               identifier=next_session['session_name']).load()
         except KeyError:
             return SkipReason("Session data is not available")
+        if len(session_data) == 0:
+            return SkipReason("Session data is not available")
+
         context.update_cursor(next_session['session_name'])
         return RunRequest(
             run_config={'ops': {'get_session_data': {"config": {'session': next_session['session_name'],

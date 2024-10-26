@@ -131,15 +131,11 @@ def get_session_data(context):
     calendar = pd.read_csv(f"{data_loc}calender.csv")
     race_df = calendar[(pd.to_datetime(calendar['EventDate']).dt.year == year) & (calendar['EventName'] == event_name)]
 
-    #if event_type == 'conventional':
-    #    session_list = ['Practice 1', 'Practice 2', 'Practice 3', 'Qualifying']
-    #else:
-    #    session_list = ['Practice 1', 'Qualifying']
-
     session_data = data.session_data(year=year, location=event_name, session=session)
     fastest_laps = data.fastest_laps(session_data=session_data)
     if len(fastest_laps) == 0:
-        return pd.DataFrame()
+        raise Exception("No Lap data!")
+
     fastest_laps_ordered = clean.order_laps_delta(laps=fastest_laps, include_pos=False)
     needed_data = fastest_laps_ordered[['Driver',
                                         'DriverNumber',
