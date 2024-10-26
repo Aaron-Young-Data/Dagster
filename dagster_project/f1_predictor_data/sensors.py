@@ -79,7 +79,8 @@ def session_data_load_job_sensor(context):
         )
     else:
         return SkipReason(f"It is not 30 mins after the {next_session['session_name']}, next session is on "
-                          f"{session_time} what is {(session_time - utc_now).total_seconds()} seconds away!")
+                          f"{session_time.date} at {session_time.time} what is "
+                          f"{(session_time - utc_now).total_seconds()} seconds away!")
 
 
 @sensor(job=full_session_data_load_job, minimum_interval_seconds=30)
