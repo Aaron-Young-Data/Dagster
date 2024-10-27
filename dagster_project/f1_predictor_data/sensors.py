@@ -4,6 +4,7 @@ from .jobs import *
 from datetime import datetime, date, timedelta
 import pytz
 import fastf1
+import fastf1.core
 import os
 from resources.sql_io_manager import MySQLDirectConnection
 from utils.file_utils import FileUtils
@@ -21,11 +22,13 @@ tableau_data_loc = os.getenv('TABLEAU_DATA_LOC')
 def session_data_load_job_sensor(context):
     # load calender csv into dataframe updated weekly by update_calender_job
     calendar = pd.read_csv(f"{data_loc}calender.csv")
+
     time_zone = pytz.timezone("GMT")
     naive = datetime.now()
     local_dt = time_zone.localize(naive, is_dst=False)
     utc_dt = local_dt.astimezone(pytz.utc)
     utc_now = datetime.utcnow()
+
     # this find the closes race in the calendar
     closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
 
@@ -64,10 +67,16 @@ def session_data_load_job_sensor(context):
         try:
             session_data = fastf1.get_session(year=utc_now.year,
                                               gp=int(closest_race['RoundNumber']),
-                                              identifier=next_session['session_name']).load()
+                                              identifier=next_session['session_name'])
+
+            session_data.load()
+
+            drivers = pd.unique(session_data.laps['Driver'])
+            if len(drivers) == 0:
+                return SkipReason("Session data is not available")
         except KeyError:
             return SkipReason("Session data is not available")
-        if len(session_data) == 0:
+        except fastf1.core.DataNotLoadedError:
             return SkipReason("Session data is not available")
 
         context.update_cursor(next_session['session_name'])
