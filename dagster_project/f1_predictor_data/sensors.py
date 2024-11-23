@@ -30,7 +30,7 @@ def session_data_load_job_sensor(context):
     utc_now = datetime.utcnow()
 
     # this find the closes race in the calendar
-    closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
+    closest_race = calendar[pd.to_datetime(calendar['Session5DateUtc']).dt.date >= utc_dt.date()].iloc[0]
 
     if closest_race['EventFormat'] == 'conventional':
         session_list = ['Session1', 'Session2', 'Session3', 'Session4']
