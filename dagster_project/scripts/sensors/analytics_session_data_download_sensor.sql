@@ -3,4 +3,4 @@ COUNT(*) as RowCount
 FROM
 TABLEAU_DATA.ALL_SESSION_DATA
 WHERE
-LapTime is not NULL
+LAP_TIME is not NULL
