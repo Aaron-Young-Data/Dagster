@@ -14,6 +14,7 @@ from .assets.dim_tables.dim_compound import *
 from .assets.dim_tables.dim_weather_type import *
 from .assets.views.weather_data import *
 from .assets.views.session_data import *
+from .assets.tables.prediction_data import *
 from .partitions import daily_partitions
 
 create_weather_forcast_table_job = define_asset_job("create_weather_forcast_table_job",
@@ -60,3 +61,7 @@ create_dim_event_view_job = define_asset_job("create_dim_event_view_job",
 create_dim_compound_table_job = define_asset_job("create_dim_compound_table_job",
                                                  selection=AssetSelection.assets(create_dim_compound),
                                                  description="Create dim compound table")
+
+create_prediction_data_table_job = define_asset_job("create_prediction_data_table_job",
+                                                 selection=AssetSelection.assets(create_prediction_data),
+                                                 description="Create prediction data table")

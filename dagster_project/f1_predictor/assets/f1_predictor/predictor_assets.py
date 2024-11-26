@@ -154,6 +154,30 @@ def create_prediction(context, create_prediction_model: LinearRegression, sessio
         }
     )
 
+@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'PREDICTION_DATA'])
+def prediction_data_to_sql(context, session_info: dict, create_prediction: pd.DataFrame):
+    event_cd = session_info['event_cd']
+    df = create_prediction
+
+    df.drop(columns=['Predicted_POS'], inplace=True)
+
+    df.loc[:, 'EVENT_CD'] = event_cd
+
+    df[['DRIVER', 'DRIVER_NUMBER']] = df['DRIVER'].str.split('-', n=1, expand=True)
+
+    df.rename(columns={'predicted_time': 'PREDICTED_LAPTIME_Q'}, inplace=True)
+
+    return Output(
+        value=df,
+        metadata={
+            'Markdown': MetadataValue.md(df.head().to_markdown()),
+            'Rows': len(df),
+        }
+    )
+
+
+
+
 
 @asset()
 def create_table_img(context, create_prediction: pd.DataFrame, session_info: dict):
