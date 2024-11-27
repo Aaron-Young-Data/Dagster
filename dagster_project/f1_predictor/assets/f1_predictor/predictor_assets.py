@@ -167,6 +167,8 @@ def prediction_data_to_sql(context, session_info: dict, create_prediction: pd.Da
 
     df.rename(columns={'predicted_time': 'PREDICTED_LAPTIME_Q'}, inplace=True)
 
+    df.loc[:, 'LOAD_TS'] = datetime.datetime.now()
+
     return Output(
         value=df,
         metadata={
