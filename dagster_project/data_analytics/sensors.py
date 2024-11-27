@@ -31,7 +31,7 @@ def session_data_download_job_sensor(context):
         query = FileUtils.file_to_query('analytics_session_data_download_sensor')
         con = MySQLDirectConnection(port, database, user, password, server)
         df = con.run_query(query=query)
-        row_count = int(df['RowCount'])
+        row_count = int(df['RowCount'].iloc[0])
         if row_count != file_length:
             return RunRequest(
                 job_name='download_all_session_data_job')
