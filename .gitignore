@@ -5,6 +5,6 @@ history
 logs
 schedules
 storage
-venv
+.venv
 .env
 .idea
