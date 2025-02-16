@@ -31,3 +31,10 @@ storage:
         env: LOG_DATABASE
       port:
         env: SQL_PORT
+
+local_artifact_storage:
+  module: dagster.core.storage.root
+  class: LocalArtifactStorage
+  config:
+    base_dir:
+      env: DAGSTER_LOCAL_ARTIFACT_STORAGE_DIR
