@@ -7,25 +7,23 @@ from .assets.dim_tables.calender import *
 from .assets.dim_tables.compound import *
 from .assets.dim_tables.track_data import *
 from .assets.session_data.session import *
-from .assets.dim_tables.location import *
 from .assets.weather_data.weather_forecast import *
 from .assets.dim_tables.weather_type import *
 from .partitions import weekly_partitions
+
+first_year = 2018
+last_year = datetime.today().year
+year_list = [i for i in range(first_year, last_year + 1, 1)]
 
 update_calender_job = define_asset_job("update_calender_job",
                                        selection=AssetSelection.assets(get_calender_data,
                                                                        calender_to_csv, calender_to_sql),
                                        description="Job to update the current years F1 calender")
 
-location_data_load_job = define_asset_job("location_data_load_job",
-                                          selection=AssetSelection.assets(get_location_data,
-                                                                          location_to_sql),
-                                          description="Job to update the dim location table")
-
 weather_type_load_job = define_asset_job("weather_type_load_job",
-                                          selection=AssetSelection.assets(get_weather_type_csv,
-                                                                          weather_type_to_sql),
-                                          description="Job to update the dim weather type table")
+                                         selection=AssetSelection.assets(get_weather_type_csv,
+                                                                         weather_type_to_sql),
+                                         description="Job to update the dim weather type table")
 
 full_session_data_load_job = define_asset_job("full_session_data_load_job",
                                               selection=AssetSelection.assets(get_full_session_data,
@@ -35,7 +33,7 @@ full_session_data_load_job = define_asset_job("full_session_data_load_job",
                                               config={'ops':
                                                           {'get_full_session_data':
                                                                {"config":
-                                                                    {'year_list': [2018, 2019, 2020, 2021, 2022, 2023]
+                                                                    {'year_list': year_list
                                                                      }}}})
 
 session_data_load_job = define_asset_job("session_data_load_job",
@@ -52,8 +50,9 @@ session_data_load_job = define_asset_job("session_data_load_job",
 
 track_data_load_job = define_asset_job('load_track_data_job',
                                        selection=AssetSelection.assets(get_track_data_csv,
+                                                                       get_track_data_api,
                                                                        track_data_to_sql,
-                                                                       get_track_event_data_csv,
+                                                                       get_track_event_data_api,
                                                                        track_event_data_to_sql),
                                        description='Job to load the track data into MySQL (dim_track, dim_event_track)')
 

@@ -1,7 +1,7 @@
 DROP VIEW IF EXISTS DIM_EVENT;
 
 CREATE VIEW DIM_EVENT AS (
-    SELECT 
+    SELECT
         CONCAT(YEAR(cldr.EventDate), cldr.RoundNumber) AS EVENT_CD,
         cldr.RoundNumber AS ROUND_NUMBER,
         cldr.EventDate AS EVENT_DT,
@@ -36,6 +36,8 @@ CREATE VIEW DIM_EVENT AS (
         cldr.Session5 AS SESSION_FIVE_TYPE,
         cldr.Session5DateUtc AS SESSION_FIVE_DT
     FROM F1_CALENDER cldr
-    LEFT JOIN DIM_TRACK_EVENT trk
-        ON CONCAT(YEAR(cldr.EventDate), cldr.RoundNumber) = trk.EVENT_CD
+    LEFT JOIN DIM_TRACK_EVENT trk_evt
+        ON CONCAT(YEAR(cldr.EventDate), cldr.RoundNumber) = trk_evt.EVENT_CD
+    LEFT JOIN DIM_TRACK trk
+        ON trk_evt.TRACK_ID = trk.TRACK_ID
 )
