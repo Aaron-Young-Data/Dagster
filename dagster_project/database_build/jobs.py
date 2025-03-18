@@ -6,7 +6,6 @@ from .assets import *
 from .assets.tables.weather_data import *
 from .assets.dim_tables.dim_track_event import *
 from .assets.dim_tables.dim_track import *
-from .assets.dim_tables.dim_location import *
 from .assets.tables.session_data import *
 from .assets.tables.f1_calender import *
 from .assets.views.dim_event import *
@@ -24,10 +23,6 @@ create_weather_forcast_table_job = define_asset_job("create_weather_forcast_tabl
 create_weather_forcast_view_job = define_asset_job("create_weather_forcast_view_job",
                                                     selection=AssetSelection.assets(create_weather_forcast_dev),
                                                     description="Create weather forcast data view")
-
-create_dim_location_table_job = define_asset_job("create_dim_location_table_job",
-                                                    selection=AssetSelection.assets(create_dim_location),
-                                                    description="Create dim location data table")
 
 create_dim_weather_type_table_job = define_asset_job("create_dim_weather_type_table_job",
                                                     selection=AssetSelection.assets(create_dim_weather_type),
