@@ -15,7 +15,7 @@ server = os.getenv('SQL_SERVER')
 
 
 @asset()
-def get_track_data_csv(context):
+def get_track_data_csv(context: AssetExecutionContext):
     track_data = pd.read_csv(f'{data_loc}track_data.csv', encoding='latin-1')
     return Output(value=track_data,
                   metadata={

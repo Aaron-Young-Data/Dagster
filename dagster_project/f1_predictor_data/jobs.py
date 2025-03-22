@@ -51,10 +51,13 @@ session_data_load_job = define_asset_job("session_data_load_job",
 track_data_load_job = define_asset_job('load_track_data_job',
                                        selection=AssetSelection.assets(get_track_data_csv,
                                                                        get_track_data_api,
-                                                                       track_data_to_sql,
-                                                                       get_track_event_data_api,
+                                                                       track_data_to_sql),
+                                       description='Job to load the track data into MySQL (dim_track)')
+
+track_event_data_load_job = define_asset_job('track_event_data_load_job',
+                                       selection=AssetSelection.assets(get_track_event_data_api,
                                                                        track_event_data_to_sql),
-                                       description='Job to load the track data into MySQL (dim_track, dim_event_track)')
+                                       description='Job to load the track event data into MySQL (dim_event_track)')
 
 compound_data_load_job = define_asset_job('load_compound_data_job',
                                           selection=AssetSelection.assets(get_compound_data,
