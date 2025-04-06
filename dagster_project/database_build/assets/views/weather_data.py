@@ -11,7 +11,7 @@ port = os.getenv('SQL_PORT')
 server = os.getenv('SQL_SERVER')
 
 
-@asset()
+@asset(deps=['create_weather_forcast_prod'])
 def create_weather_forcast_dev(context):
     query = FileUtils.file_to_query('create_weather_forecast_dev')
     context.log.info(f'Query to run: \n{query}')

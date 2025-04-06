@@ -10,10 +10,9 @@ database = os.getenv('DATABASE')
 port = os.getenv('SQL_PORT')
 server = os.getenv('SQL_SERVER')
 
-
-@asset(deps=['create_f1_calender', 'create_dim_track', 'create_dim_track_event'])
-def create_dim_event_view(context):
-    query = FileUtils.file_to_query('create_dim_event_view')
+@asset(deps=['create_dim_event_view'])
+def create_dim_year_view(context):
+    query = FileUtils.file_to_query('create_dim_year_view')
     context.log.info(f'Query to run: \n{query}')
     con = MySQLDirectConnection(port, database, user, password, server)
     df = con.run_query_no_output(query=query)
