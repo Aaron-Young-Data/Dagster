@@ -98,7 +98,7 @@ def full_session_data_load_job_sensor(context):
     year = today.year
     year_list = list(range(2018, year + 1))
     run_records = context.instance.get_run_records(
-        RunsFilter(job_name="session_data_load_job", statuses=[DagsterRunStatus.STARTED])
+        RunsFilter(job_name="full_session_data_load_job", statuses=[DagsterRunStatus.STARTED])
     )
     if len(run_records) == 0:
         query = FileUtils.file_to_query('session_data_sensor')
@@ -107,8 +107,8 @@ def full_session_data_load_job_sensor(context):
         row_count = int(df['RowCount'].iloc[0])
         if row_count == 0:
             return RunRequest(
-                job_name='session_data_load_job',
-                run_config={'ops': {'get_session_data': {"config": {'year_list': year_list
+                job_name='full_session_data_load_job',
+                run_config={'ops': {'get_full_session_data': {"config": {'year_list': year_list
                                                                     }}}})
 
         else:

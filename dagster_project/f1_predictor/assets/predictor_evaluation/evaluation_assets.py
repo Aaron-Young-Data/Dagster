@@ -102,16 +102,17 @@ def evaluate_prediction_graph(context, evaluate_prediction_dataframe: pd.DataFra
     df = evaluate_prediction_dataframe
 
     fig, ax = plt.subplots(figsize=(8, 8))
-    colours = dict()
-    for driver in df['DRIVER'].to_list():
-        colours.update({driver: fastf1.plotting.driver_color(driver[:3])})
+    #colours = dict()
+    #for driver in df['DRIVER'].to_list():
+    #    colours.update({driver: fastf1.plotting.
+    #    (driver[:3])})
 
     sns.scatterplot(data=df,
                     x="LapTime_Dif",
                     y="POS_Dif",
                     ax=ax,
                     hue="DRIVER",
-                    palette=colours,
+                    #palette=colours,
                     s=80,
                     linewidth=1,
                     legend='auto',
@@ -131,7 +132,7 @@ def evaluate_prediction_graph(context, evaluate_prediction_dataframe: pd.DataFra
                     x="Predicted_POS",
                     ax=ax,
                     hue="DRIVER",
-                    palette=colours,
+                    #palette=colours,
                     s=80,
                     linewidth=1,
                     legend='auto',
