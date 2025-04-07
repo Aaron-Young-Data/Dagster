@@ -5,7 +5,14 @@ WITH session_data_temp AS (
 SELECT
     DRIVER AS DRIVER,
     DRIVER_NUMBER AS DRIVER_NUMBER,
-    TEAM AS TEAM,
+    CASE -- This will update old teams with the current team names to make comparisons easier
+        WHEN TEAM IN ('Force India', 'Racing Point', 'None') THEN 'Aston Martin'
+        -- None is Assigned to Nico Hulkenburg in 2020 (Was in Racing Point)
+        WHEN TEAM IN ('Sauber', 'Alfa Romeo Racing', 'Alfa Romeo') THEN 'Kick Sauber'
+        WHEN TEAM IN ('Toro Rosso', 'AlphaTauri', 'RB') THEN 'Racing Bulls'
+        WHEN TEAM IN ('Renault') THEN 'Alpine'
+        ELSE TEAM
+    END AS TEAM,
     EVENT_CD AS EVENT_CD,
     CASE WHEN SESSION_CD = 'Practice 1' THEN LAPTIME END AS LAPTIME_FP1,
     CASE WHEN SESSION_CD = 'Practice 1' THEN SECTOR1_TIME END AS SECTOR1_TIME_FP1,

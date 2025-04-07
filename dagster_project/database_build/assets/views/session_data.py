@@ -11,7 +11,7 @@ port = os.getenv('SQL_PORT')
 server = os.getenv('SQL_SERVER')
 
 
-@asset()
+@asset(deps=['create_session_data', 'create_dim_compound', 'create_dim_event_view'])
 def create_cleaned_session_data(context):
     query = FileUtils.file_to_query('create_cleaned_session_data')
     context.log.info(f'Query to run: \n{query}')

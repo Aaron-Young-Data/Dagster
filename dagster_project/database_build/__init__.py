@@ -13,17 +13,7 @@ all_assets = [*table_assets,
 defs = Definitions(
     assets=all_assets,
     jobs=[
-        create_weather_forcast_table_job,
-        create_dim_track_table_job,
-        create_dim_track_event_table_job,
-        create_session_data_table_job,
-        create_f1_calender_table_job,
-        create_dim_event_view_job,
-        create_dim_compound_table_job,
-        create_weather_forcast_view_job,
-        create_dim_weather_type_table_job,
-        create_cleaned_session_data_view_job,
-        create_prediction_data_table_job
+        rebuild_database_job
     ],
     schedules=[],
     sensors=[],
