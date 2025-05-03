@@ -48,8 +48,14 @@ class GetData:
 
         list_fastest_laps = list()
         for drv in drivers:
-            drvs_fastest_lap = session_data.laps.pick_driver(drv).pick_fastest()
-            list_fastest_laps.append(drvs_fastest_lap)
+            drvs_fastest_lap = session_data.laps.pick_drivers(drv).pick_fastest()
+            try:
+                drvs_fastest_lap['Driver']
+                list_fastest_laps.append(drvs_fastest_lap)
+            except TypeError:
+                pass
+
+
 
         if weather_data:
             fastest_laps = Laps(list_fastest_laps).sort_values(by='Time').reset_index(drop=True).dropna(how='all')
