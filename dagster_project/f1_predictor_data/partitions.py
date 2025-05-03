@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from dagster import WeeklyPartitionsDefinition, DailyPartitionsDefinition
+from dagster import WeeklyPartitionsDefinition
 
 today = datetime.today()
 partition_start_date = today - timedelta(weeks=8)

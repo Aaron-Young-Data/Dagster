@@ -10,7 +10,8 @@ from resources import sql_io_manager
 
 all_assets = [*dim_table_update_assets,
               *session_data_update_assets,
-              *weather_data_update_assets]
+              *weather_data_update_assets,
+              *session_update_assets]
 
 defs = Definitions(
     assets=all_assets,
@@ -22,17 +23,21 @@ defs = Definitions(
         compound_data_load_job,
         session_data_load_job,
         weather_forecast_data_load_job,
-        weather_type_load_job
+        weather_type_load_job,
+        quali_session_data_load_job
     ],
-    schedules=[update_calender_job_weekly_schedule,
-               update_compound_job_weekly_schedule,
-               update_track_job_weekly_schedule,
-               update_track_event_job_weekly_schedule,
-               weather_forecast_schedule,
-               update_weather_data_type_schedule],
+    schedules=[
+        update_calender_job_weekly_schedule,
+        update_compound_job_weekly_schedule,
+        update_track_job_weekly_schedule,
+        update_track_event_job_weekly_schedule,
+        weather_forecast_schedule,
+        update_weather_data_type_schedule
+    ],
     sensors=[
-             full_session_data_load_job_sensor,
-             session_data_load_job_sensor],
+        full_session_data_load_job_sensor,
+        session_data_load_job_sensor
+    ],
     resources={
         'sql_io_manager': sql_io_manager.SQLIOManager(
             user=os.getenv('SQL_USER'),

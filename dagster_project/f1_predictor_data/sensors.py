@@ -1,5 +1,5 @@
 import pandas as pd
-from dagster import sensor, RunRequest, SkipReason, DagsterRunStatus, RunsFilter
+from dagster import sensor, RunRequest, SkipReason, DagsterRunStatus, RunsFilter, SensorEvaluationContext, SensorResult
 from .jobs import *
 from datetime import datetime, date, timedelta
 import pytz
@@ -16,6 +16,9 @@ database = os.getenv('DATABASE')
 port = os.getenv('SQL_PORT')
 server = os.getenv('SQL_SERVER')
 tableau_data_loc = os.getenv('TABLEAU_DATA_LOC')
+
+@sensor(job=quali_session_data_load_job, minimum_interval_seconds=30)
+def quali_session_data_load_sensor(context: SensorEvaluationContext):
 
 
 @sensor(job=session_data_load_job, minimum_interval_seconds=30)

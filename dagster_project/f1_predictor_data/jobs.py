@@ -9,11 +9,24 @@ from .assets.dim_tables.track_data import *
 from .assets.session_data.session import *
 from .assets.weather_data.weather_forecast import *
 from .assets.dim_tables.weather_type import *
+from .assets.session.quali_data import get_quali_data, get_quali_data_to_sql
 from .partitions import weekly_partitions
 
 first_year = 2018
 last_year = datetime.today().year
 year_list = [i for i in range(first_year, last_year + 1, 1)]
+
+quali_session_data_load_job = define_asset_job("quali_session_data_load_job",
+                                               selection=AssetSelection.assets(get_quali_data,
+                                                                               get_quali_data_to_sql),
+                                               description="Job to upload the selected qualifying weekend data to MySQL",
+                                               config={'ops':
+                                                           {'get_quali_data':
+                                                                {"config":
+                                                                     {'session': 'Qualifying',
+                                                                      'event_name': 'Japanese Grand Prix',
+                                                                      'year': 2025
+                                                                      }}}})
 
 update_calender_job = define_asset_job("update_calender_job",
                                        selection=AssetSelection.assets(get_calender_data,

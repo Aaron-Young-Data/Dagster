@@ -18,20 +18,6 @@ schedules:
   use_threads: true
   num_workers: 4
 
-storage:
-  mysql:
-    mysql_db:
-      username:
-        env: SQL_USER
-      password:
-        env: SQL_PASSWORD
-      hostname:
-        env: SQL_SERVER
-      db_name:
-        env: LOG_DATABASE
-      port:
-        env: SQL_PORT
-
 local_artifact_storage:
   module: dagster.core.storage.root
   class: LocalArtifactStorage
