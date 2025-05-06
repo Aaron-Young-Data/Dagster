@@ -15,7 +15,9 @@ defs = Definitions(
     jobs=[
         mysql_daily_backup
     ],
-    schedules=[],
+    schedules=[
+        mysql_daily_backup_schedule
+    ],
     sensors=[discord_failure_sensor],
     resources={
         'sql_io_manager': sql_io_manager.SQLIOManager(

@@ -49,7 +49,7 @@ def database_backup(context: AssetExecutionContext,
         raise Exception(f"Error: Backup directory '{backup_dir}' does not exist.")
 
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    backup_file = f"{backup_dir}mysql_prod_{timestamp}.sql"
+    backup_file = f"{backup_dir}mysql_backup_{timestamp}.sql"
 
     dump_command = f'mysqldump -h {server} -P {port} -u {user} --password={password} --all-databases --result-file "{backup_file}"'
 
