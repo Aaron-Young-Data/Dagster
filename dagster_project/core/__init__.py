@@ -8,11 +8,13 @@ from .schedules import *
 from .sensors import *
 from resources import sql_io_manager
 
-all_assets = []
+all_assets = [*core_database_assets]
 
 defs = Definitions(
     assets=all_assets,
-    jobs=[],
+    jobs=[
+        mysql_daily_backup
+    ],
     schedules=[],
     sensors=[discord_failure_sensor],
     resources={
