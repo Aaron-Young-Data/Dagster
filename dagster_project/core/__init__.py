@@ -13,7 +13,8 @@ all_assets = [*core_database_assets]
 defs = Definitions(
     assets=all_assets,
     jobs=[
-        mysql_daily_backup
+        mysql_daily_backup_job,
+        mysql_restore_job
     ],
     schedules=[
         mysql_daily_backup_schedule
