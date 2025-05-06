@@ -41,17 +41,22 @@ def database_backup_cleanup(context: AssetExecutionContext):
                   metadata={'backup_directory': backup_dir})
 
 
-@asset()
+@asset(config_schema={'type': str})
 def database_backup(context: AssetExecutionContext,
                     database_backup_cleanup: str):
     backup_dir = database_backup_cleanup
+    type = context.op_config['type']
+
+    if type not in ['manual', 'auto']:
+        raise Exception('Invalid backup type')
+
     if not os.path.exists(backup_dir):
         raise Exception(f"Error: Backup directory '{backup_dir}' does not exist.")
 
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    backup_file = f"{backup_dir}mysql_backup_{timestamp}.sql"
+    backup_file = f"{backup_dir}{type}_mysql_{timestamp}.sql"
 
-    dump_command = f'mysqldump -h {server} -P {port} -u {user} --password={password} --all-databases --result-file "{backup_file}"'
+    dump_command = f'mysqldump -h {server} -P {port} -u {user} --password={password} --all-databases --no-tablespaces --result-file "{backup_file}"'
 
     context.log.info('Creating Backup')
     subprocess.run(dump_command, shell=True)
