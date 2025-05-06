@@ -26,7 +26,7 @@ def database_backup_restore(context: AssetExecutionContext,
 
     context.log.info(f'Restoring from {backup_file}')
 
-    dump_command = f'mysql -h {server} -P {port} -u {user} --password={password} < "{backup_file}"'
+    dump_command = f'mysql -h {server} -P {port} -u {user} --password={password} ML_PROJECT_PROD < "{backup_file}"'
 
     context.log.info('Restoring database from backup file')
     subprocess.run(dump_command, shell=True)
