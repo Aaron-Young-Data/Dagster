@@ -5,7 +5,7 @@ from pandas import (
     read_sql,
 )
 from sqlalchemy import create_engine, text
-from dagster import ConfigurableIOManager, OutputContext, InputContext
+from dagster import ConfigurableIOManager, OutputContext, InputContext, ConfigurableResource
 from contextlib import contextmanager
 import pyodbc
 from typing import Optional, Sequence
@@ -83,13 +83,22 @@ class SQLIOManager(ConfigurableIOManager):
         return f'SELECT {col_list} FROM {schema}.{table}'
 
 
-class MySQLDirectConnection:
-    def __init__(self, port, database, user, password, server):
-        self.port = port
-        self.database = database
-        self.user = user
-        self.password = password
-        self.server = server
+class MySQLDirectConnection(ConfigurableResource):
+    user: str
+    password: str
+    database: str
+    port: str
+    server: str
+    @property
+    def _config(self):
+        return self.dict()
+
+    def _connect(self, config):
+        user = config['user']
+        password = config['password']
+        database = config['database']
+        port = config['port']
+        server = config['server']
 
         self.connection_string = f'mysql+mysqlconnector://{user}:{password}@{server}:{port}/{database}'
         self.engine = create_engine(self.connection_string)
@@ -102,6 +111,7 @@ class MySQLDirectConnection:
         self.cursor = self.cursor_conn.cursor()
 
     def run_query(self, query):
+        self._connect(self._config)
         try:
             print('Query to run: ' + query)
             df = pd.read_sql(query, self.conn)
@@ -111,6 +121,7 @@ class MySQLDirectConnection:
         return df
 
     def run_query_no_output(self, query):
+        self._connect(self._config)
         try:
             print('Query to run: ' + query)
             self.cursor.execute(query)
