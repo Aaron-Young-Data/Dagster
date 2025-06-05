@@ -73,6 +73,8 @@ def track_data_to_sql(context: AssetExecutionContext,
              'TRACK_EVOLUTION',
              'DOWNFORCE']]
 
+    df['LOAD_TS'] = datetime.now()
+
     return Output(
         value=df,
         metadata={
@@ -106,6 +108,7 @@ def get_track_event_data_api(context):
 @asset(io_manager_key='sql_io_manager', key_prefix=['REFERENCE', 'DIM_TRACK_EVENT', 'cleanup'])
 def track_event_data_to_sql(context, get_track_event_data_api: pd.DataFrame):
     df = get_track_event_data_api
+    df['LOAD_TS'] = datetime.now()
     return Output(
         value=df,
         metadata={

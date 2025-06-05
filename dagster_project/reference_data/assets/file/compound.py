@@ -1,6 +1,6 @@
 from dagster import asset, Output, MetadataValue
 import fastf1
-from datetime import date
+from datetime import date, datetime
 import pandas as pd
 import os
 
@@ -19,9 +19,10 @@ def get_compound_data(context):
 
 
 
-@asset(io_manager_key='sql_io_manager', key_prefix=[database, 'DIM_COMPOUND', 'cleanup'])
+@asset(io_manager_key='sql_io_manager', key_prefix=['REFERENCE', 'DIM_COMPOUND', 'cleanup'])
 def compound_to_sql(context, get_compound_data: pd.DataFrame):
     df = get_compound_data
+    df['LOAD_TS'] = datetime.now()
     return Output(
         value=df,
         metadata={

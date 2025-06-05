@@ -11,8 +11,8 @@ port = os.getenv('SQL_PORT')
 server = os.getenv('SQL_SERVER')
 
 @asset()
-def create_dim_compound(context):
-    query = FileUtils.file_to_query('create_dim_compound')
+def create_dim_driver(context):
+    query = FileUtils.file_to_query('create_dim_driver')
     context.log.info(f'Query to run: \n{query}')
     con = MySQLDirectConnection(port, database, user, password, server)
     df = con.run_query_no_output(query=query)

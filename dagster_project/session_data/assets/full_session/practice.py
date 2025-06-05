@@ -12,7 +12,7 @@ def get_full_practice_data_api(context: AssetExecutionContext,
 
         api_data = context.resources.fastf1.get_practice_results(year=row['EVENT_YEAR'],
                                                                  round_number=row['ROUND_NUMBER'],
-                                                                 drivers=False).copy()
+                                                                 drivers=True).copy()
 
         api_data.loc[:, 'EVENT_CD'] = row['EVENT_CD']
 

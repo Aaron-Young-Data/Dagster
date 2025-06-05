@@ -7,25 +7,28 @@ from .schedules import *
 from .sensors import *
 from resources import sql_io_manager, jolpi_api, fast_f1_resource
 
-all_assets = [*full_session_update_assets, *session_update_assets]
+all_assets = [*full_session_update_assets, *session_update_assets, *pre_assets]
 
 defs = Definitions(
     assets=all_assets,
     jobs=[
         full_session_data_load_job,
         full_race_data_load_job,
-        full_quali_data_load_job,
+        full_race_laps_data_load_job,
+        full_qualifying_data_load_job,
         full_practice_data_load_job,
         practice_data_load_job,
         quali_data_load_job,
-        race_data_load_job
+        race_data_load_job,
+        race_laps_data_load_job
     ],
     schedules=[
     ],
     sensors=[
         practice_data_load_sensor,
         qualifying_data_load_sensor,
-        race_data_load_sensor
+        race_data_load_sensor,
+        race_laps_data_load_sensor
     ],
     resources={
         'sql_io_manager': sql_io_manager.SQLIOManager(

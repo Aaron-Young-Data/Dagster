@@ -12,8 +12,38 @@ server = os.getenv('SQL_SERVER')
 
 
 @asset()
-def create_session_data(context):
-    query = FileUtils.file_to_query('create_session_data')
+def create_practice_results_data(context):
+    query = FileUtils.file_to_query('create_practice_data_table')
+    context.log.info(f'Query to run: \n{query}')
+    con = MySQLDirectConnection(port, database, user, password, server)
+    df = con.run_query_no_output(query=query)
+    return Output(
+        value=df
+    )
+
+@asset()
+def create_qualifying_results_data(context):
+    query = FileUtils.file_to_query('create_qualifying_data_table')
+    context.log.info(f'Query to run: \n{query}')
+    con = MySQLDirectConnection(port, database, user, password, server)
+    df = con.run_query_no_output(query=query)
+    return Output(
+        value=df
+    )
+
+@asset()
+def create_race_results_data(context):
+    query = FileUtils.file_to_query('create_race_data_table')
+    context.log.info(f'Query to run: \n{query}')
+    con = MySQLDirectConnection(port, database, user, password, server)
+    df = con.run_query_no_output(query=query)
+    return Output(
+        value=df
+    )
+
+@asset()
+def create_race_laps_data(context):
+    query = FileUtils.file_to_query('create_race_laps_data_table')
     context.log.info(f'Query to run: \n{query}')
     con = MySQLDirectConnection(port, database, user, password, server)
     df = con.run_query_no_output(query=query)

@@ -15,5 +15,6 @@ Session3DateUtc DATETIME,
 Session4  VARCHAR(30),
 Session4DateUtc DATETIME,
 Session5  VARCHAR(30),
-Session5DateUtc DATETIME
+Session5DateUtc DATETIME,
+LOAD_TS DATETIME
 )

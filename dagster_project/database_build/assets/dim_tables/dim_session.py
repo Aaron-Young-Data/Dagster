@@ -10,10 +10,9 @@ database = os.getenv('DATABASE')
 port = os.getenv('SQL_PORT')
 server = os.getenv('SQL_SERVER')
 
-
-@asset(deps=['create_weather_forcast_prod'])
-def create_weather_forcast_dev(context):
-    query = FileUtils.file_to_query('create_weather_forecast_dev')
+@asset()
+def create_dim_session(context):
+    query = FileUtils.file_to_query('create_dim_session')
     context.log.info(f'Query to run: \n{query}')
     con = MySQLDirectConnection(port, database, user, password, server)
     df = con.run_query_no_output(query=query)

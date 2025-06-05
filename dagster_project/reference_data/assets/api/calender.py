@@ -1,6 +1,6 @@
 from dagster import asset, Output, MetadataValue, AssetExecutionContext
 import fastf1
-from datetime import date
+from datetime import date, datetime
 import pandas as pd
 import os
 
@@ -44,6 +44,7 @@ def calender_to_sql(context: AssetExecutionContext,
                                  'Session3Date',
                                  'Session4Date',
                                  'Session5Date'], axis=1)
+    df['LOAD_TS'] = datetime.now()
     return Output(
         value=df,
         metadata={

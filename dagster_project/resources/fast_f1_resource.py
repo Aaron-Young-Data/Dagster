@@ -3,6 +3,7 @@ from dagster import ConfigurableResource
 import fastf1 as ff1
 from fastf1.core import Laps
 from typing import Literal
+from fastf1.core import Session
 
 
 class FastF1Client:
@@ -15,12 +16,13 @@ class FastF1Client:
     def _load_session(self,
                       year: int,
                       gp: int,
-                      identifier: str):
+                      identifier: str,
+                      laps: bool = False):
 
         self.sess = ff1.get_session(year=year,
                                     gp=gp,
                                     identifier=identifier)
-        self.sess.load()
+        self.sess.load(laps=laps)
 
     @staticmethod
     def _session_list(year: int, round_number: int):
@@ -54,11 +56,17 @@ class FastF1Client:
 
         if drivers:
             driver_df = self.sess.results[['DriverId', 'TeamId', 'Abbreviation']]
-            df = self._fastest_laps()[['Abbreviation', 'LapTime', 'Sector1Time', 'Sector2Time', 'Sector3Time']]
+            df = self._fastest_laps()[['Driver', 'LapTime', 'Sector1Time', 'Sector2Time', 'Sector3Time']]
             df = driver_df.set_index('Abbreviation').join(df.set_index('Driver'))
         else:
             df = self._fastest_laps()[['Driver', 'Team', 'LapTime', 'Sector1Time', 'Sector2Time', 'Sector3Time']]
         return df
+
+    def _get_race_laps(self):
+        laps = pd.DataFrame()
+        for driver in self.sess.drivers:
+            laps = pd.concat([laps, self.sess.laps.pick_drivers(driver)])
+        return laps
 
     def get_practice_results(self,
                              year: int,
@@ -104,7 +112,8 @@ class FastF1Client:
     def get_race_results(self,
                          year: int,
                          round_number: int,
-                         sprint: bool = False):
+                         sprint: bool = False,
+                         laps: bool = False):
 
         if sprint and year >= 2021:
             identifier = 'Sprint'
@@ -113,13 +122,18 @@ class FastF1Client:
         else:
             raise Exception('Sprint Race is not supported before 2021')
 
-        self._load_session(year=year,
-                           gp=round_number,
-                           identifier=identifier)
-
-        df = self.sess.results
-
-        return df[['DriverId', 'TeamId', 'ClassifiedPosition', 'Position', 'Time', 'Status', 'Points']]
+        if laps:
+            self._load_session(year=year,
+                               gp=round_number,
+                               identifier=identifier,
+                               laps=laps)
+            return self._get_race_laps()
+        else:
+            self._load_session(year=year,
+                               gp=round_number,
+                               identifier=identifier)
+            df = self.sess.results
+            return df[['DriverId', 'TeamId', 'ClassifiedPosition', 'Position', 'Time', 'Status', 'Points']]
 
 
 class FastF1Resource(ConfigurableResource):
@@ -132,17 +146,21 @@ class FastF1Resource(ConfigurableResource):
                              year: int,
                              round_number: int,
                              practice_num: Literal[1, 2, 3, None] = None,
-                             drivers: bool = True):
+                             drivers: bool = True) -> pd.DataFrame:
         client = self.get_client()
         return client.get_practice_results(year, round_number, practice_num, drivers)
 
     def get_qualifying_results(self,
                                year: int,
                                round_number: int,
-                               sprint: bool = False):
+                               sprint: bool = False) -> pd.DataFrame:
         client = self.get_client()
         return client.get_qualifying_results(year, round_number, sprint)
 
-    def get_race_results(self, year: int, round_number: int, sprint: bool = False):
+    def get_race_results(self,
+                         year: int,
+                         round_number: int,
+                         sprint: bool = False,
+                         laps: bool = False) -> pd.DataFrame:
         client = self.get_client()
-        return client.get_race_results(year, round_number, sprint)
+        return client.get_race_results(year, round_number, sprint, laps)
