@@ -1,6 +1,7 @@
 from dagster import (
     AssetSelection,
-    define_asset_job)
+    define_asset_job,
+    RetryPolicy,)
 
 # Session Assets
 from .assets.full_session.practice import *
@@ -35,6 +36,7 @@ full_session_data_load_job = define_asset_job('full_session_data_load_job',
                                                                               get_teams_sql),
                                               description="Job to load all session data for a list of years "
                                                           "(2018+) and upload the data to MySQL",
+                                              op_retry_policy=RetryPolicy(max_retries=3),
                                               config={'ops':
                                                           {'get_events_sql':
                                                                {"config":

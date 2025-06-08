@@ -145,11 +145,16 @@ def clean_race_lap_data(context: AssetExecutionContext,
     df["Deleted"] = df["Deleted"].astype(int)
     df["IsAccurate"] = df["IsAccurate"].astype(int)
 
+    context.log.info('Setting blanks in track status to -2')
+    df["TrackStatus"] = df["TrackStatus"].replace('', -2)
+
     context.log.info('Removing unused columns')
     df.drop(columns=['Driver',
                      'Team',
                      'DRIVER_CODE',
                      'NAME',
+                     'QUALI_CD',
+                     'DRIVER_NUMBER',
                      'PitInTime',
                      'PitOutTime',
                      'Time',

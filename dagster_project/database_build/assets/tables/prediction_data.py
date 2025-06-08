@@ -12,8 +12,18 @@ server = os.getenv('SQL_SERVER')
 
 
 @asset()
-def create_prediction_data(context):
+def create_qualifying_prediction_data(context):
     query = FileUtils.file_to_query('create_prediction_data')
+    context.log.info(f'Query to run: \n{query}')
+    con = MySQLDirectConnection(port, database, user, password, server)
+    df = con.run_query_no_output(query=query)
+    return Output(
+        value=df
+    )
+
+@asset()
+def create_race_prediction_data(context):
+    query = FileUtils.file_to_query('create_race_data')
     context.log.info(f'Query to run: \n{query}')
     con = MySQLDirectConnection(port, database, user, password, server)
     df = con.run_query_no_output(query=query)

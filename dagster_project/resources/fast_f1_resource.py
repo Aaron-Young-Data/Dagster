@@ -3,7 +3,7 @@ from dagster import ConfigurableResource
 import fastf1 as ff1
 from fastf1.core import Laps
 from typing import Literal
-from fastf1.core import Session
+from fastf1.core import Session, DataNotLoadedError
 
 
 class FastF1Client:
@@ -26,19 +26,27 @@ class FastF1Client:
 
     @staticmethod
     def _session_list(year: int, round_number: int):
-        event = ff1.get_event(year, round_number)[
-            ['Session1', 'Session2', 'Session3', 'Session4', 'Session5']].to_frame()
-        return [x for c in event.columns for x in event[c]]
+        try:
+            event = ff1.get_event(year, round_number)[
+                ['Session1', 'Session2', 'Session3', 'Session4', 'Session5']].to_frame()
+            return [x for c in event.columns for x in event[c]]
+        except ValueError as err:
+            if 'Failed to load any schedule data.' in err.args[0]:
+                return ['Practice 1', 'Practice 2', 'Practice 3', 'Qualifying', 'Race']
+            else:
+                raise ValueError(err)
 
     def _fastest_laps(self):
         fastest_laps = list()
         for driver in self.sess.drivers:
-            lap = self.sess.laps.pick_drivers(driver).pick_fastest()
             try:
+                lap = self.sess.laps.pick_drivers(driver).pick_fastest()
                 lap['Driver']
                 fastest_laps.append(lap)
             except TypeError:
                 pass
+            except DataNotLoadedError:
+                return pd.DataFrame(columns=['Driver', 'LapTime', 'Sector1Time', 'Sector2Time', 'Sector3Time'])
 
         return Laps(fastest_laps).sort_values(by='LapTime').reset_index(drop=True)
 
@@ -52,7 +60,8 @@ class FastF1Client:
 
         self._load_session(year=year,
                            gp=round_number,
-                           identifier=identifier)
+                           identifier=identifier,
+                           laps=True)
 
         if drivers:
             driver_df = self.sess.results[['DriverId', 'TeamId', 'Abbreviation']]
@@ -103,7 +112,8 @@ class FastF1Client:
 
         self._load_session(year=year,
                            gp=round_number,
-                           identifier=identifier)
+                           identifier=identifier,
+                           laps=True)
 
         df = self.sess.results
 

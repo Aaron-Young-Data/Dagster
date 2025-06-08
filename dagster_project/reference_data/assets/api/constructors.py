@@ -1,6 +1,8 @@
+import pandas
 import pandas as pd
 from dagster import asset, Output, MetadataValue, AssetExecutionContext
 import datetime
+from fastf1.plotting._constants import *
 
 
 @asset(required_resource_keys={"jolpi_api"})
@@ -24,9 +26,41 @@ def get_constructor_data_api(context: AssetExecutionContext):
                   })
 
 
+@asset(required_resource_keys={"jolpi_api"})
+def get_constructor_colour_data(context: AssetExecutionContext):
+    data = {
+        'ferrari': 'e80020',
+        'force_india': 'ff87bc',
+        'haas': 'b6babd',
+        'mclaren': 'ff8000',
+        'mercedes': '27f4d2',
+        'red_bull': '0600ef',
+        'renault': 'fff500',
+        'sauber': '00e700',
+        'toro_rosso': '2b4562',
+        'williams': '00a0dd',
+        'alfa': '900000',
+        'racing_point': 'ff87bc',
+        'alphatauri': '2b4562',
+        'alpine': 'ff87bc',
+        'aston_martin': '00665f',
+        'rb': '6692ff'
+    }
+
+    df = pd.DataFrame({'CONSTRUCTOR_ID': data.keys(),
+                       'CONSTRUCTOR_COLOUR': data.values()})
+
+    return Output(value=df,
+                  metadata={
+                      'Markdown': MetadataValue.md(df.head().to_markdown()),
+                      'Rows': len(df)
+                  })
+
+
 @asset()
 def clean_constructor_data(context: AssetExecutionContext,
-                           get_constructor_data_api: pd.DataFrame):
+                           get_constructor_data_api: pd.DataFrame,
+                           get_constructor_colour_data: pd.DataFrame):
     df = get_constructor_data_api
 
     df.drop_duplicates(subset='constructorId', inplace=True, ignore_index=True)
@@ -36,6 +70,10 @@ def clean_constructor_data(context: AssetExecutionContext,
                        'name': 'NAME',
                        'nationality': 'NATIONALITY'},
               inplace=True)
+
+    df = pd.merge(left=df,
+                  right=get_constructor_colour_data,
+                  on='CONSTRUCTOR_ID')
 
     return Output(value=df,
                   metadata={

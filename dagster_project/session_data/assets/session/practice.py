@@ -43,7 +43,7 @@ def clean_practice_data(context: AssetExecutionContext,
 
     # Removing un needed columns
     context.log.info('Removing columns from merge')
-    df.drop(columns=['Driver', 'Team', 'DRIVER_CODE', 'NAME'], inplace=True)
+    df.drop(columns=['Driver', 'Team', 'DRIVER_CODE', 'NAME', 'DRIVER_NUMBER', 'QUALI_CD'], inplace=True)
 
     # Rename columns to match the table column names
     context.log.info('Renaming columns')

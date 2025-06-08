@@ -30,7 +30,8 @@ update_driver_jobs = define_asset_job('update_driver_jobs',
 update_constructors_jobs = define_asset_job('update_constructors_jobs',
                                             selection=AssetSelection.assets(get_constructor_data_api,
                                                                             clean_constructor_data,
-                                                                            constructor_data_to_sql),
+                                                                            constructor_data_to_sql,
+                                                                            get_constructor_colour_data),
                                             description="Job to update the dim constructor table",
                                             op_retry_policy=RetryPolicy(max_retries=3)
                                             )
