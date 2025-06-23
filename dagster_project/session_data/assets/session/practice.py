@@ -1,10 +1,11 @@
 import pandas as pd
 import datetime
 from dagster import asset, Output, MetadataValue, AssetExecutionContext
+from utils.discord_utils import DiscordUtils
 
 
 @asset(required_resource_keys={"fastf1"},
-       config_schema={'practice_num':  int,
+       config_schema={'practice_num': int,
                       'round_number': int,
                       'year': int})
 def get_practice_data_api(context: AssetExecutionContext):
@@ -12,7 +13,12 @@ def get_practice_data_api(context: AssetExecutionContext):
     round_number = context.op_config['round_number']
     year = context.op_config['year']
 
-    context.log.info(f"Getting Free Practice {practice_num} for round {round_number} - {year}")
+    mess = f"Getting Free Practice {practice_num} for round {round_number} - {year}"
+
+    context.log.info(mess)
+
+    dis = DiscordUtils()
+    dis.send_message(message=mess)
 
     api_data = context.resources.fastf1.get_practice_results(year=year,
                                                              round_number=round_number,
@@ -79,7 +85,14 @@ def practice_data_to_sql(context: AssetExecutionContext,
                          clean_practice_data: pd.DataFrame):
     df = clean_practice_data
     df['LOAD_TS'] = datetime.datetime.now()
-    context.log.info(f"Loading {len(df)} rows of data into SESSION.PRACTICE_RESULTS")
+
+    mess = f"Loading {len(df)} rows of data into SESSION.PRACTICE_RESULTS"
+
+    context.log.info(mess)
+
+    dis = DiscordUtils()
+    dis.send_message(message=mess)
+
     return Output(value=df,
                   metadata={
                       'Markdown': MetadataValue.md(df.head().to_markdown()),

@@ -1,6 +1,7 @@
 import pandas as pd
 import datetime
 from dagster import asset, Output, MetadataValue, AssetExecutionContext
+from utils.discord_utils import DiscordUtils
 
 
 @asset(required_resource_keys={"fastf1"},
@@ -13,7 +14,12 @@ def get_quali_data_api(context: AssetExecutionContext):
     year = context.op_config['year']
 
     if sprint:
-        context.log.info(f"Getting Sprint Qualifying for round {round_number} - {year}")
+        mess = f"Getting Sprint Qualifying for round {round_number} - {year}"
+
+        context.log.info(mess)
+
+        dis = DiscordUtils()
+        dis.send_message(message=mess)
 
         api_data = context.resources.fastf1.get_qualifying_results(year=year,
                                                                    round_number=round_number,
@@ -22,7 +28,12 @@ def get_quali_data_api(context: AssetExecutionContext):
         api_data.loc[:, 'SESSION_CD'] = 5
         api_data.loc[:, 'EVENT_CD'] = int(str(year) + str(round_number))
     else:
-        context.log.info(f"Getting Qualifying for round {round_number} - {year}")
+        mess = f"Getting Qualifying for round {round_number} - {year}"
+
+        context.log.info(mess)
+
+        dis = DiscordUtils()
+        dis.send_message(message=mess)
 
         api_data = context.resources.fastf1.get_qualifying_results(year=year,
                                                                    round_number=round_number).copy()
@@ -88,7 +99,14 @@ def quali_data_to_sql(context: AssetExecutionContext,
                       clean_quali_data: pd.DataFrame):
     df = clean_quali_data
     df['LOAD_TS'] = datetime.datetime.now()
-    context.log.info(f"Loading {len(df)} rows of data into SESSION.QUALIFYING_RESULTS")
+
+    mess = f"Loading {len(df)} rows of data into SESSION.QUALIFYING_RESULTS"
+
+    context.log.info(mess)
+
+    dis = DiscordUtils()
+    dis.send_message(message=mess)
+
     return Output(value=df,
                   metadata={
                       'Markdown': MetadataValue.md(df.head().to_markdown()),

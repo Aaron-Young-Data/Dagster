@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import datetime
 from dagster import asset, Output, MetadataValue, AssetExecutionContext
-
+from utils.discord_utils import DiscordUtils
 
 @asset(required_resource_keys={"fastf1"},
        config_schema={'round_number': int,
@@ -14,7 +14,12 @@ def get_race_data_api(context: AssetExecutionContext):
     year = context.op_config['year']
 
     if sprint:
-        context.log.info(f"Getting Sprint Race Results for round {round_number} - {year}")
+        mess = f"Getting Sprint Race Results for round {round_number} - {year}"
+
+        context.log.info(mess)
+
+        dis = DiscordUtils()
+        dis.send_message(message=mess)
 
         api_data = context.resources.fastf1.get_race_results(year=year,
                                                              round_number=round_number,
@@ -23,7 +28,12 @@ def get_race_data_api(context: AssetExecutionContext):
         api_data.loc[:, 'SESSION_CD'] = 6
         api_data.loc[:, 'EVENT_CD'] = int(str(year) + str(round_number))
     else:
-        context.log.info(f"Getting Race Results for round {round_number} - {year}")
+        mess = f"Getting Race Results for round {round_number} - {year}"
+
+        context.log.info(mess)
+
+        dis = DiscordUtils()
+        dis.send_message(message=mess)
 
         api_data = context.resources.fastf1.get_race_results(year=year,
                                                              round_number=round_number).copy()
@@ -79,7 +89,13 @@ def race_data_to_sql(context: AssetExecutionContext,
                      clean_race_data: pd.DataFrame):
     df = clean_race_data
     df['LOAD_TS'] = datetime.datetime.now()
-    context.log.info(f"Loading {len(df)} rows of data into SESSION.RACE_RESULTS")
+
+    mess = f"Loading {len(df)} rows of data into SESSION.RACE_RESULTS"
+
+    context.log.info(mess)
+
+    dis = DiscordUtils()
+    dis.send_message(message=mess)
     return Output(value=df,
                   metadata={
                       'Markdown': MetadataValue.md(df.head().to_markdown()),
@@ -96,6 +112,16 @@ def get_race_lap_data_api(context: AssetExecutionContext):
     sprint = context.op_config['sprint']
     round_number = context.op_config['round_number']
     year = context.op_config['year']
+
+    if sprint:
+        mess = f"Getting Sprint Race Laps for round {round_number} - {year}"
+    else:
+        mess = f"Getting Race Laps for round {round_number} - {year}"
+
+    context.log.info(mess)
+
+    dis = DiscordUtils()
+    dis.send_message(message=mess)
 
     df = context.resources.fastf1.get_race_results(year=year,
                                                    round_number=round_number,
@@ -207,7 +233,13 @@ def race_lap_data_to_sql(context: AssetExecutionContext,
                          clean_race_lap_data: pd.DataFrame):
     df = clean_race_lap_data
     df['LOAD_TS'] = datetime.datetime.now()
-    context.log.info(f"Loading {len(df)} rows of data into SESSION.RACE_LAPS")
+    mess = f"Loading {len(df)} rows of data into SESSION.RACE_LAPS"
+
+    context.log.info(mess)
+
+    dis = DiscordUtils()
+    dis.send_message(message=mess)
+
     return Output(value=df,
                   metadata={
                       'Markdown': MetadataValue.md(df.head().to_markdown()),
