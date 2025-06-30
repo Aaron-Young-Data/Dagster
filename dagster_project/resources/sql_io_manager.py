@@ -5,7 +5,7 @@ from pandas import (
     read_sql,
 )
 from sqlalchemy import create_engine, text
-from dagster import ConfigurableIOManager, OutputContext, InputContext
+from dagster import ConfigurableIOManager, OutputContext, InputContext, ConfigurableResource
 from contextlib import contextmanager
 import pyodbc
 from typing import Optional, Sequence

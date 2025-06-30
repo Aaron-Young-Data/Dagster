@@ -1,169 +1,79 @@
 import pandas as pd
-from dagster import sensor, RunRequest, SkipReason, DagsterRunStatus, RunsFilter
+from dagster import sensor, RunRequest, SkipReason, DagsterRunStatus, RunsFilter, SensorEvaluationContext
 from .jobs import *
-from datetime import datetime, date, timedelta
-import pytz
-import fastf1
-import os
-from resources.sql_io_manager import MySQLDirectConnection
-from utils.discord_utils import DiscordUtils
 from utils.file_utils import FileUtils
 
-data_loc = os.getenv('DATA_STORE_LOC')
-user = os.getenv('SQL_USER')
-password = os.getenv('SQL_PASSWORD')
-database = os.getenv('DATABASE')
-port = os.getenv('SQL_PORT')
-server = os.getenv('SQL_SERVER')
-tableau_data_loc = os.getenv('TABLEAU_DATA_LOC')
 
+@sensor(job=create_qualifying_prediction_job,
+        minimum_interval_seconds=300,
+        required_resource_keys={'mysql'})
+def create_qualifying_prediction_job_sensor(context):
+    calender_query = FileUtils.file_to_query('sql_next_event')
+    with context.resources.mysql.get_connection() as conn:
+        next_event_df = pd.read_sql(calender_query, conn).iloc[0]
 
-@sensor(job=create_prediction_job, minimum_interval_seconds=30)
-def create_prediction_job_sensor(context):
-    if context.cursor == str(date.today()):
-        return SkipReason("Sensor has already run today")
+    if context.cursor == '':
+        context.update_cursor(f'{next_event_df["ROUND_NUMBER"] - 1} - {next_event_df["EVENT_YEAR"]}')
 
-    # load calender csv into dataframe updated weekly by update_calender_job
-    calendar = pd.read_csv(f"{data_loc}calender.csv")
+    if context.cursor == f'{next_event_df["ROUND_NUMBER"]} - {next_event_df["EVENT_YEAR"]}':
+        return SkipReason(f"Sensor has already run for {next_event_df['ROUND_NUMBER']} - {next_event_df['EVENT_YEAR']}")
 
-    # convert GMT to UTC as calendar data is in UTC
-    time_zone = pytz.timezone("GMT")
-    naive = datetime.today()
-    local_dt = time_zone.localize(naive, is_dst=None)
-    utc_dt = local_dt.astimezone(pytz.utc)
-
-    # this find the closes race in the calendar
-    closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
-
-    closest_race['EventDate'] = pd.to_datetime(closest_race['EventDate'])
-    event_name = closest_race['EventName']
-    event_year = closest_race['EventDate'].year
-
-    if closest_race['EventFormat'] == 'conventional':
-        closest_race['Session3DateUtc'] = pd.to_datetime(closest_race['Session3DateUtc'])
-        session = closest_race['Session3']
-        if closest_race['Session3DateUtc'].date() != utc_dt.date():
-            return SkipReason(f'{event_name} - {session} is not today')
+    if next_event_df['EVENT_TYPE_CD'] == 1:
+        session_num = 3
     else:
-        closest_race['Session1DateUtc'] = pd.to_datetime(closest_race['Session1DateUtc'])
-        session = closest_race['Session1']
-        if closest_race['Session1DateUtc'].date() != utc_dt.date():
-            return SkipReason(f'{event_name} - {session} is not today')
+        session_num = 1
 
-    event_name = closest_race['EventName']
-    event_year = closest_race['EventDate'].year
+    query = FileUtils.file_to_query('quali_prediction_job_sensor')
 
-    query = FileUtils.file_to_query('prediction_job_sensor')
+    query = query.replace('{event_year}', str(next_event_df['EVENT_YEAR']))
+    query = query.replace('{round_number}', str(next_event_df['ROUND_NUMBER']))
+    query = query.replace('{session_number}', str(session_num))
 
-    query_modified = query.replace('{event_name}', event_name)
-    query_modified = query_modified.replace('{event_year}', str(event_year))
-    query_modified = query_modified.replace('{session}', session)
+    with context.resources.mysql.get_connection() as conn:
+        df = pd.read_sql(query, conn).iloc[0]
 
-    con = MySQLDirectConnection(port, database, user, password, server)
-
-    df = con.run_query(query=query_modified)
-
-    row_count = int(df['RowCount'].iloc[0])
+    row_count = int(df['RowCount'])
 
     if row_count != 0:
-        context.update_cursor(str(date.today()))
+        context.update_cursor(f'{next_event_df["ROUND_NUMBER"]} - {next_event_df["EVENT_YEAR"]}')
         return RunRequest(
-            run_config={'ops': {'session_info': {"config": {'event_type': closest_race['EventFormat'],
-                                                            'event_name': closest_race['EventName'],
-                                                            'year': naive.year
+            run_config={'ops': {'session_info': {"config": {'round_number': next_event_df['ROUND_NUMBER'],
+                                                            'year': next_event_df['EVENT_YEAR']
                                                             }}}}
         )
     else:
-        return SkipReason(f"Data is not available for {event_name} - {session} in MySQL database yet")
+        return SkipReason(f"Practice {session_num} data has not been loaded for {next_event_df['ROUND_NUMBER']} - {next_event_df['EVENT_YEAR']}")
 
+@sensor(job=evaluate_qualifying_prediction_job,
+        minimum_interval_seconds=300,
+        required_resource_keys={'mysql'})
+def evaluate_qualifying_prediction_job_sensor(context):
+    calender_query = FileUtils.file_to_query('sql_next_event')
+    with context.resources.mysql.get_connection() as conn:
+        next_event_df = pd.read_sql(calender_query, conn).iloc[0]
 
-@sensor(job=evaluate_prediction_job, minimum_interval_seconds=30)
-def evaluate_prediction_job_sensor(context):
-    if context.cursor == str(date.today()):
-        return SkipReason("Sensor has already run today")
+    if context.cursor == '':
+        context.update_cursor(f'{next_event_df["ROUND_NUMBER"] - 1} - {next_event_df["EVENT_YEAR"]}')
 
-    # load calender csv into dataframe updated weekly by update_calender_job
-    calendar = pd.read_csv(f"{data_loc}calender.csv")
+    if context.cursor == f'{next_event_df["ROUND_NUMBER"]} - {next_event_df["EVENT_YEAR"]}':
+        return SkipReason(f"Sensor has already run for {next_event_df['ROUND_NUMBER']} - {next_event_df['EVENT_YEAR']}")
 
-    # convert GMT to UTC as calendar data is in UTC
-    time_zone = pytz.timezone("GMT")
-    naive = datetime.today()
-    local_dt = time_zone.localize(naive, is_dst=None)
-    utc_dt = local_dt.astimezone(pytz.utc)
+    query = FileUtils.file_to_query('quali_evaluation_job_sensor')
 
-    # this find the closes race in the calendar
-    closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
+    query = query.replace('{event_year}', str(next_event_df['EVENT_YEAR']))
+    query = query.replace('{round_number}', str(next_event_df['ROUND_NUMBER']))
 
-    closest_race['EventDate'] = pd.to_datetime(closest_race['EventDate'])
-    closest_race['Session4DateUtc'] = pd.to_datetime(closest_race['Session4DateUtc'])
+    with context.resources.mysql.get_connection() as conn:
+        df = pd.read_sql(query, conn).iloc[0]
 
-    event_name = closest_race['EventName']
-    event_year = closest_race['EventDate'].year
-
-    if closest_race['Session4DateUtc'].date() != utc_dt.date():
-        return SkipReason(f'{event_name} - Qualifying is not today')
-
-    query = FileUtils.file_to_query('prediction_eval_job_sensor')
-
-    query_modified = query.replace('{event_name}', event_name)
-    query_modified = query_modified.replace('{event_year}', str(event_year))
-
-    con = MySQLDirectConnection(port, database, user, password, server)
-
-    df = con.run_query(query=query_modified)
-
-    row_count = int(df['RowCount'].iloc[0])
+    row_count = int(df['RowCount'])
 
     if row_count != 0:
-        context.update_cursor(str(date.today()))
+        context.update_cursor(f'{next_event_df["ROUND_NUMBER"]} - {next_event_df["EVENT_YEAR"]}')
         return RunRequest(
-            run_config={'ops': {'quali_session_info': {"config": {'event_name': closest_race['EventName'],
-                                                                  'year': naive.year
-                                                                  }}}}
+            run_config={'ops': {'session_info': {"config": {'round_number': next_event_df['ROUND_NUMBER'],
+                                                            'year': next_event_df['EVENT_YEAR']
+                                                            }}}}
         )
     else:
-        return SkipReason(f"Qualifying data is not available for {event_name} in MySQL database yet")
-
-
-@sensor(job=create_dnn_model_job, minimum_interval_seconds=30)
-def create_dnn_model_sensor(context):
-    if context.cursor == str(date.today()):
-        return SkipReason("Sensor has already run today")
-
-    # load calender csv into dataframe updated weekly by update_calender_job
-    calendar = pd.read_csv(f"{data_loc}calender.csv")
-
-    # convert GMT to UTC as calendar data is in UTC
-    time_zone = pytz.timezone("GMT")
-    naive = datetime.today()
-    local_dt = time_zone.localize(naive, is_dst=None)
-    utc_dt = local_dt.astimezone(pytz.utc)
-
-    # this find the closes race in the calendar
-    closest_race = calendar[pd.to_datetime(calendar['EventDate']).dt.date > utc_dt.date()].iloc[0]
-
-    closest_race['EventDate'] = pd.to_datetime(closest_race['EventDate'])
-    closest_race['Session4DateUtc'] = pd.to_datetime(closest_race['Session4DateUtc'])
-
-    event_name = closest_race['EventName']
-    event_year = closest_race['EventDate'].year
-
-    if closest_race['Session4DateUtc'].date() != utc_dt.date():
-        return SkipReason(f'{event_name} - Qualifying is not today')
-
-    query = FileUtils.file_to_query('prediction_eval_job_sensor')
-
-    query_modified = query.replace('{event_name}', event_name)
-    query_modified = query_modified.replace('{event_year}', str(event_year))
-
-    con = MySQLDirectConnection(port, database, user, password, server)
-
-    df = con.run_query(query=query_modified)
-
-    row_count = int(df['RowCount'].iloc[0])
-
-    if row_count != 0:
-        context.update_cursor(str(date.today()))
-        return RunRequest()
-    else:
-        return SkipReason(f"Qualifying data is not available for {event_name} in MySQL database yet")
+        return SkipReason(f"Qualifying data has not been loaded for {next_event_df['ROUND_NUMBER']} - {next_event_df['EVENT_YEAR']}")

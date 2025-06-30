@@ -9,10 +9,11 @@ pyodbc
 SQLAlchemy
 seaborn
 dagster-mysql
-tensorflow
 mysql-connector-python
 matplotlib
 numpy
 openmeteo-requests
 requests-cache
 retry-requests
+plotly
+kaleido
