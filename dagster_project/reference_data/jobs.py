@@ -39,11 +39,13 @@ update_constructors_jobs = define_asset_job('update_constructors_jobs',
 update_calender_job = define_asset_job("update_calender_job",
                                        selection=AssetSelection.assets(get_calender_data,
                                                                        calender_to_csv, calender_to_sql),
+                                       op_retry_policy=RetryPolicy(max_retries=3),
                                        description="Job to update the current years F1 calender")
 
 update_dim_session_job = define_asset_job("update_dim_session_job",
                                           selection=AssetSelection.assets(get_dim_session_data,
                                                                           dim_session_to_sql),
+                                          op_retry_policy=RetryPolicy(max_retries=3),
                                           description="Job to update the dim session data table")
 
 track_data_load_job = define_asset_job('load_track_data_job',
@@ -62,4 +64,5 @@ track_event_data_load_job = define_asset_job('track_event_data_load_job',
 compound_data_load_job = define_asset_job('load_compound_data_job',
                                           selection=AssetSelection.assets(get_compound_data,
                                                                           compound_to_sql),
-                                          description='Job to load the compound data into MySQL (dim_compound)')
+                                          description='Job to load the compound data into MySQL (dim_compound)',
+                                          op_retry_policy=RetryPolicy(max_retries=3))
