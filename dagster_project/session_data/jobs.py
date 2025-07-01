@@ -51,6 +51,7 @@ full_race_data_load_job = define_asset_job('full_race_data_load_job',
                                                                            full_race_data_to_sql),
                                            description="Job to load all race session data for a list of years "
                                                        "(2018+) and upload the data to MySQL",
+                                           op_retry_policy=RetryPolicy(max_retries=3),
                                            config={'ops':
                                                        {'get_events_sql':
                                                             {"config":
@@ -65,6 +66,7 @@ full_qualifying_data_load_job = define_asset_job('full_qualifying_data_load_job'
                                                                                  full_quali_data_to_sql),
                                                  description="Job to load all quali session data for a list of years "
                                                              "(2018+) and upload the data to MySQL",
+                                                 op_retry_policy=RetryPolicy(max_retries=3),
                                                  config={'ops':
                                                              {'get_events_sql':
                                                                   {"config":
@@ -79,6 +81,7 @@ full_practice_data_load_job = define_asset_job('full_practice_data_load_job',
                                                                                full_practice_data_to_sql),
                                                description="Job to load all practice session data for a list of years "
                                                            "(2018+) and upload the data to MySQL",
+                                               op_retry_policy=RetryPolicy(max_retries=3),
                                                config={'ops':
                                                            {'get_events_sql':
                                                                 {"config":
@@ -92,6 +95,7 @@ full_race_laps_data_load_job = define_asset_job('full_race_laps_data_load_job',
                                                                                 clean_full_race_lap_data,
                                                                                 full_race_lap_data_to_sql),
                                                 description="Job to load the Race Laps for the config provided.",
+                                                op_retry_policy=RetryPolicy(max_retries=3),
                                                 config={'ops':
                                                             {'get_events_sql':
                                                                  {"config":
