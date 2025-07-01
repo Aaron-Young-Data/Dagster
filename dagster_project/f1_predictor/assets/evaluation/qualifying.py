@@ -8,10 +8,10 @@ import os
 
 data_loc = os.getenv('DATA_STORE_LOC')
 
+
 @asset(required_resource_keys={"mysql"})
 def get_qualifying_evaluation_data(context: AssetExecutionContext,
                                    session_info: dict):
-
     query = FileUtils.file_to_query('get_quali_eval_data')
 
     query = query.replace('{round_num}', str(session_info['round_number']))
@@ -33,8 +33,8 @@ def get_qualifying_evaluation_data(context: AssetExecutionContext,
 
 @asset()
 def create_qualifying_position_evaluation_img(context: AssetExecutionContext,
-                                             get_qualifying_evaluation_data: pd.DataFrame,
-                                             session_info: dict):
+                                              get_qualifying_evaluation_data: pd.DataFrame,
+                                              session_info: dict):
     df = get_qualifying_evaluation_data
 
     file_name = f'{session_info["round_number"]}_laptime_eval.png'
@@ -108,11 +108,11 @@ def create_qualifying_position_evaluation_img(context: AssetExecutionContext,
                   }
                   )
 
+
 @asset()
 def create_qualifying_laptime_evaluation_img(context: AssetExecutionContext,
-                                              get_qualifying_evaluation_data: pd.DataFrame,
-                                              session_info: dict):
-
+                                             get_qualifying_evaluation_data: pd.DataFrame,
+                                             session_info: dict):
     df = get_qualifying_evaluation_data
 
     file_name = f'{session_info["round_number"]}_position_eval.png'
@@ -145,7 +145,9 @@ def create_qualifying_laptime_evaluation_img(context: AssetExecutionContext,
                                     ticks='',
                                     showticklabels=False,
                                     showline=True,
-                                    linecolor="#15151E"
+                                    linecolor="#15151E",
+                                    range=[df['LAPTIME_DIFFRENCE'].min() - 0.5,
+                                           df['LAPTIME_DIFFRENCE'].max() + 0.5]
                                 ),
                                 width=1000,
                                 height=750,
@@ -158,15 +160,14 @@ def create_qualifying_laptime_evaluation_img(context: AssetExecutionContext,
                                 )
                     )
 
-    fig.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
-
-    fig.write_image(save_loc)
+    fig.write_image(save_loc, scale=6)
 
     return Output(value=save_loc,
                   metadata={
                       'File Name': file_name
                   }
                   )
+
 
 @asset()
 def send_qualifying_evaluation_discord(context: AssetExecutionContext,
@@ -181,7 +182,3 @@ def send_qualifying_evaluation_discord(context: AssetExecutionContext,
     dis.send_message(message=f'This is how well the prediction performed for Round {round_number} - {year}!',
                      attachment=[create_qualifying_position_evaluation_img, create_qualifying_laptime_evaluation_img])
     return
-
-
-
-

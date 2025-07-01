@@ -173,7 +173,7 @@ def create_qualifying_prediction_img(context: AssetExecutionContext,
                                     showline=True,
                                     linecolor="#15151E",
                                     range=[output_df['Predicted Time'].min() - 0.25,
-                                           output_df['Predicted Time'].max() + 0.75]
+                                           output_df['Predicted Time'].max() + 1.5]
                                 ),
                                 width=1000,
                                 height=750,
