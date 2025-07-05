@@ -1,12 +1,13 @@
 from dagster import (
     AssetSelection,
     define_asset_job)
-from datetime import datetime
 from .partitions import weekly_partitions
 from .assets import *
 
 from .assets.weather.weather_forecast import *
 from .assets.reference.weather_type import *
+
+from datetime import datetime
 
 first_year = 2018
 last_year = datetime.today().year
