@@ -55,7 +55,7 @@ def practice_data_load_sensor(context: SensorEvaluationContext):
                               today - timedelta(hours=3)]
 
     if len(next_session) == 0:
-        SkipReason(f"{next_event_df['EVENT_NAME']} has no more practice sessions to load")
+        return SkipReason(f"{next_event_df['EVENT_NAME']} has no more practice sessions to load")
     else:
         next_session = next_session.iloc[0]
 
@@ -134,15 +134,15 @@ def qualifying_data_load_sensor(context: SensorEvaluationContext):
 
     next_session = session_df[session_df['session_time']
                               >
-                              today - timedelta(hours=3)]
+                              today - timedelta(hours=4)]
 
     if len(next_session) == 0:
-        SkipReason(f"{next_event_df['EVENT_NAME']} has no more quali sessions to load")
+        return SkipReason(f"{next_event_df['EVENT_NAME']} has no more quali sessions to load")
     else:
         next_session = next_session.iloc[0]
 
     if context.cursor == f'{next_event_df["ROUND_NUMBER"]} - {next_session["session_name"]}':
-        return SkipReason(f"{next_event_df['EventName']} - {next_session['session_name']} has already been loaded!")
+        return SkipReason(f"{next_event_df['ROUND_NUMBER']} - {next_session['session_name']} has already been loaded!")
 
     session_time = next_session['session_time']
     session_time_modified = (session_time + timedelta(hours=1.5))
@@ -162,7 +162,7 @@ def qualifying_data_load_sensor(context: SensorEvaluationContext):
             drivers = pd.unique(api_data['DriverId'])
             if len(drivers) <= 1:
                 return SkipReason("Session data is not available as there is no drivers in the data")
-            if len(api_data[~api_data['Q1'].isnull()]) >= 1:
+            if len(api_data[~api_data['Q1'].isnull()]) == 0:
                 return SkipReason("Session data is not available as there is no lap times in the data")
         except KeyError:
             return SkipReason("Session data is not available (KeyError)")
@@ -230,7 +230,7 @@ def race_data_load_sensor(context: SensorEvaluationContext):
         next_session = next_session.iloc[0]
 
     if context.cursor == f'{next_event_df["ROUND_NUMBER"]} - {next_session["session_name"]}':
-        return SkipReason(f"{next_event_df['EVENT_NAME']} - {next_session['session_name']} has already been loaded!")
+        return SkipReason(f"{next_event_df['ROUND_NUMBER']} - {next_session['session_name']} has already been loaded!")
 
     session_time = next_session['session_time']
     session_time_modified = (session_time + timedelta(hours=1.5))
