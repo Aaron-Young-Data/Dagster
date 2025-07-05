@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from dagster import asset, Output, MetadataValue
+import datetime
 
 data_loc = os.getenv('DATA_STORE_LOC')
 
@@ -19,6 +20,7 @@ def get_weather_type_csv(context):
 def weather_type_to_sql(context,
                         get_weather_type_csv: pd.DataFrame):
     df = get_weather_type_csv
+    df['LOAD_TS'] = datetime.datetime.now()
     return Output(
         value=df,
         metadata={

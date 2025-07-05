@@ -37,8 +37,8 @@ def create_qualifying_prediction_job_sensor(context):
     if row_count != 0:
         context.update_cursor(f'{next_event_df["ROUND_NUMBER"]} - {next_event_df["EVENT_YEAR"]}')
         return RunRequest(
-            run_config={'ops': {'session_info': {"config": {'round_number': next_event_df['ROUND_NUMBER'],
-                                                            'year': next_event_df['EVENT_YEAR']
+            run_config={'ops': {'session_info': {"config": {'round_number': int(next_event_df['ROUND_NUMBER']),
+                                                            'year': int(next_event_df['EVENT_YEAR'])
                                                             }}}}
         )
     else:
@@ -71,8 +71,8 @@ def evaluate_qualifying_prediction_job_sensor(context):
     if row_count != 0:
         context.update_cursor(f'{next_event_df["ROUND_NUMBER"]} - {next_event_df["EVENT_YEAR"]}')
         return RunRequest(
-            run_config={'ops': {'session_info': {"config": {'round_number': next_event_df['ROUND_NUMBER'],
-                                                            'year': next_event_df['EVENT_YEAR']
+            run_config={'ops': {'session_info': {"config": {'round_number': int(next_event_df['ROUND_NUMBER']),
+                                                            'year': int(next_event_df['EVENT_YEAR'])
                                                             }}}}
         )
     else:
