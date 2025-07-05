@@ -162,6 +162,8 @@ def qualifying_data_load_sensor(context: SensorEvaluationContext):
             drivers = pd.unique(api_data['DriverId'])
             if len(drivers) <= 1:
                 return SkipReason("Session data is not available as there is no drivers in the data")
+            if len(api_data[~api_data['Q1'].isnull()]) >= 1:
+                return SkipReason("Session data is not available as there is no lap times in the data")
         except KeyError:
             return SkipReason("Session data is not available (KeyError)")
         except DataNotLoadedError:
