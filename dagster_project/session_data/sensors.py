@@ -134,7 +134,7 @@ def qualifying_data_load_sensor(context: SensorEvaluationContext):
 
     next_session = session_df[session_df['session_time']
                               >
-                              today - timedelta(hours=4)]
+                              today - timedelta(hours=5)]
 
     if len(next_session) == 0:
         return SkipReason(f"{next_event_df['EVENT_NAME']} has no more quali sessions to load")
@@ -334,7 +334,7 @@ def race_laps_data_load_sensor(context: SensorEvaluationContext):
                                                                  sprint=sprint,
                                                                  laps=True).copy()
 
-            drivers = pd.unique(api_data.laps['Driver'])
+            drivers = pd.unique(api_data['Driver'])
             if len(drivers) == 0:
                 return SkipReason("Session data is not available")
         except KeyError:
@@ -344,10 +344,10 @@ def race_laps_data_load_sensor(context: SensorEvaluationContext):
 
         context.update_cursor(f'{next_event_df["ROUND_NUMBER"]} - {next_session["session_name"]}')
         return RunRequest(
-            run_config={'ops': {'get_race_data_api': {"config": {'round_number': int(next_event_df['ROUND_NUMBER']),
-                                                                 'year': int(next_event_df['EVENT_YEAR']),
-                                                                 'sprint': sprint
-                                                                 }}}}
+            run_config={'ops': {'get_race_lap_data_api': {"config": {'round_number': int(next_event_df['ROUND_NUMBER']),
+                                                                     'year': int(next_event_df['EVENT_YEAR']),
+                                                                     'sprint': sprint
+                                                                     }}}}
         )
     else:
         return SkipReason(f"It is not 30 mins after the {next_session['session_name']}, next session is on "
