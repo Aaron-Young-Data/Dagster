@@ -15,10 +15,13 @@ defs = Definitions(
     jobs=[
         weather_forecast_data_load_job,
         weather_type_load_job,
+        load_full_weather_historic_data_job,
+        load_weather_historic_data_job
     ],
     schedules=[
         weather_forecast_schedule,
-        update_weather_data_type_schedule
+        update_weather_data_type_schedule,
+        weather_historic_schedule
     ],
     sensors=[
     ],

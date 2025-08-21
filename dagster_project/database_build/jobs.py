@@ -16,7 +16,7 @@ from .assets.views.dim_year import *
 from .assets.dim_tables.dim_driver import *
 from .assets.dim_tables.dim_constructor import *
 from .assets.dim_tables.dim_session import *
-
+from .assets.views.weather_forecast_vw import *
 from .partitions import daily_partitions
 
 rebuild_database_job = define_asset_job("rebuild_database_job",
@@ -36,5 +36,7 @@ rebuild_database_job = define_asset_job("rebuild_database_job",
                                                                         create_dim_driver,
                                                                         create_dim_constructor,
                                                                         create_dim_session,
-                                                                        create_race_laps_data),
+                                                                        create_race_laps_data,
+                                                                        create_weather_historic,
+                                                                        create_weather_forecast_view),
                                         description="Rebuild the database tables and views")

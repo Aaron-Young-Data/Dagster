@@ -15,3 +15,8 @@ weather_forecast_schedule = build_schedule_from_partitioned_job(
     hour_of_day=0,
     minute_of_hour=5
 )
+
+weather_historic_schedule = build_schedule_from_partitioned_job(
+    job=load_weather_historic_data_job,
+    hour_of_day=12
+)

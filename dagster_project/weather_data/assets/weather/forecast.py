@@ -1,12 +1,12 @@
 import json
-from dagster import asset, Output, MetadataValue
+from dagster import asset, Output, MetadataValue, AssetExecutionContext
 import os
 import pandas as pd
 from resources.sql_io_manager import MySQLDirectConnection
 from utils.file_utils import FileUtils
 from datetime import datetime, timedelta, date
 import urllib
-from weather_data.partitions import weekly_partitions
+from weather_data.partitions import weekly_partitions, daily_partitions
 import openmeteo_requests
 import requests_cache
 from retry_requests import retry
@@ -24,7 +24,8 @@ retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
 openmeteo = openmeteo_requests.Client(session=retry_session)
 
 
-@asset(partitions_def=weekly_partitions)
+@asset(partitions_def=daily_partitions,
+       required_resource_keys={"mysql"})
 def get_calender_locations_sql(context):
     partition_date_str = context.partition_key
     forcast_date = datetime.strptime(partition_date_str, '%Y-%M-%d')
@@ -32,8 +33,8 @@ def get_calender_locations_sql(context):
     query = FileUtils.file_to_query('sql_calender_data')
     formatted_query = query.replace('{partitioned_date_year}', str(year))
     context.log.info(f'Query to run: \n{formatted_query}')
-    con = MySQLDirectConnection(port, database, user, password, server)
-    df = con.run_query(query=formatted_query)
+    with context.resources.mysql.get_connection() as conn:
+        df = pd.read_sql(formatted_query, conn)
     return Output(
         value=df,
         metadata={
@@ -43,12 +44,12 @@ def get_calender_locations_sql(context):
     )
 
 
-@asset(partitions_def=weekly_partitions)
+@asset(partitions_def=daily_partitions)
 def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame):
     partition_date_str = context.partition_key
     forecast_date = datetime.strptime(partition_date_str, '%Y-%m-%d').date()
 
-    context.log.info('Getting forecast for: {} to {}'.format(forecast_date, forecast_date + timedelta(days=2)))
+    context.log.info('Getting forecast for: {} to {}'.format(forecast_date, forecast_date + timedelta(days=6)))
 
     api_url = "https://api.open-meteo.com/v1/forecast"
 
@@ -56,7 +57,7 @@ def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame)
 
     weather_data = pd.DataFrame()
 
-    for location in location_df.FCST_LOCATION.unique():#
+    for location in location_df.FCST_LOCATION.unique():
         context.log.info('Getting data for {}'.format(location))
 
         latitude = location_df[location_df['FCST_LOCATION'] == location].LATITUDE.iloc[0]
@@ -67,9 +68,9 @@ def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame)
             "longitude": [longitude],
             "hourly": ["temperature_2m", "precipitation_probability", "precipitation", "weather_code", "cloud_cover",
                        "wind_speed_10m", "wind_direction_10m"],
-            "timezone": "GMT",
+            "timezone": "UTC",
             "start_date": str(forecast_date),
-            "end_date": str(forecast_date + timedelta(days=3))
+            "end_date": str(forecast_date + timedelta(days=6))
         }
 
         responses = openmeteo.weather_api(api_url, params=params)
@@ -93,7 +94,7 @@ def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame)
         )}
 
         hourly_data['FCST_LOCATION'] = location
-        hourly_data['source'] = 'openmeteo'
+        hourly_data['source'] = 'openmeteo_forecast'
         hourly_data["temp"] = hourly_temperature_2m
         hourly_data["precipprob"] = hourly_precipitation_probability
         hourly_data["precip"] = hourly_precipitation
@@ -125,13 +126,39 @@ def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame)
         }
     )
 
+@asset(required_resource_keys={"mysql"},
+       partitions_def=daily_partitions)
+def weather_forecast_cleanup(context: AssetExecutionContext, get_weather_forecast_data: pd.DataFrame):
+    df = get_weather_forecast_data
+
+    query = f'''
+    DELETE 
+    FROM WEATHER.WEATHER_FORECAST 
+    WHERE 
+        date(FCST_DATETIME) IN {tuple(set(df.utc_datetime.dt.strftime('%Y-%m-%d')))}
+    '''
+
+    context.log.info(query)
+
+    with context.resources.mysql.get_connection() as conn:
+        conn.cursor().execute(query)
+        conn.commit()
+
+    return Output(
+        value=df,
+        metadata={
+            'Markdown': MetadataValue.md(df.head().to_markdown()),
+            'Rows': len(df),
+        }
+    )
+
 
 @asset(io_manager_key='sql_io_manager',
        key_prefix=['WEATHER', 'WEATHER_FORECAST', 'append'],
-       partitions_def=weekly_partitions)
-def weather_forecast_to_sql(context, get_weather_forecast_data: pd.DataFrame):
+       partitions_def=daily_partitions)
+def weather_forecast_to_sql(context, weather_forecast_cleanup: pd.DataFrame):
     load_date = datetime.today()
-    df = get_weather_forecast_data
+    df = weather_forecast_cleanup
     df.rename(columns={'FCST_LOCATION': 'FCST_LOCATION',
                        'utc_datetime': 'FCST_DATETIME',
                        'temp': 'TEMPERATURE',

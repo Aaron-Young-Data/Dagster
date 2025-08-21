@@ -11,22 +11,13 @@ port = os.getenv('SQL_PORT')
 server = os.getenv('SQL_SERVER')
 
 
-@asset()
-def create_weather_forcast(context):
-    query = FileUtils.file_to_query('create_weather_forecast')
+@asset(deps=['create_f1_calender', 'create_dim_track', 'create_dim_track_event'])
+def create_weather_forecast_view(context, create_weather_forcast):
+    query = FileUtils.file_to_query('create_weather_forecast_vw')
     context.log.info(f'Query to run: \n{query}')
     con = MySQLDirectConnection(port, database, user, password, server)
     df = con.run_query_no_output(query=query)
-    return Output(
-        value=df
-    )
 
-@asset()
-def create_weather_historic(context):
-    query = FileUtils.file_to_query('create_weather_historic')
-    context.log.info(f'Query to run: \n{query}')
-    con = MySQLDirectConnection(port, database, user, password, server)
-    df = con.run_query_no_output(query=query)
     return Output(
         value=df
     )
