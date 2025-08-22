@@ -125,11 +125,11 @@ def get_weather_historic_data(context, get_calender_locations_sql_historic: pd.D
     context.log.info('Getting forecast for: {}'.format(partition_date))
 
     if (date.today() - timedelta(days=1)) == partition_date:
-        api_url = "https://archive-api.open-meteo.com/v1/archive"
-        source = "openmeteo_archive_api"
-    else:
         api_url = "https://api.open-meteo.com/v1/forecast"
         source = "openmeteo_forecast_api"
+    else:
+        api_url = "https://archive-api.open-meteo.com/v1/archive"
+        source = "openmeteo_archive_api"
 
     location_df = get_calender_locations_sql_historic
 
