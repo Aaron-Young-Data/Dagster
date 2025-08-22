@@ -17,12 +17,12 @@ last_year = datetime.today().year
 year_list = [i for i in range(first_year, last_year + 1, 1)]
 
 # Weather Forecast Jobs
-weather_forecast_data_load_job = define_asset_job('load_weather_forcast_data_job',
+weather_forecast_data_load_job = define_asset_job('load_weather_forecast_data_job',
                                                   selection=AssetSelection.assets(get_calender_locations_sql,
                                                                                   get_weather_forecast_data,
                                                                                   weather_forecast_cleanup,
                                                                                   weather_forecast_to_sql),
-                                                  description='Job to upload the weather forcast')
+                                                  description='Job to upload the weather forecast')
 
 # Weather Historic Jobs
 load_full_weather_historic_data_job = define_asset_job('load_full_weather_historic_data_job',
