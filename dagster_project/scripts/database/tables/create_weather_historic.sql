@@ -9,6 +9,6 @@ WIND_SPEED float,
 WIND_DIRECTION float,
 CLOUD_COVER float,
 WEATHER_TYPE_CD float,
-FCST_SOURCE varchar(30),
+FCST_SOURCE varchar(50),
 LOAD_TS datetime
 );

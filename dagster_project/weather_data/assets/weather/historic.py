@@ -128,7 +128,7 @@ def get_weather_historic_data(context, get_calender_locations_sql_historic: pd.D
         api_url = "https://archive-api.open-meteo.com/v1/archive"
         source = "openmeteo_archive_api"
     else:
-        api_url = "https://archive-api.open-meteo.com/v1/forecast"
+        api_url = "https://api.open-meteo.com/v1/forecast"
         source = "openmeteo_forecast_api"
 
     location_df = get_calender_locations_sql_historic
