@@ -62,7 +62,7 @@ def get_full_weather_historic_data(context, get_calender_locations_sql_historic:
                         "wind_direction_10m"],
             "timezone": "GMT",
             "start_date": '2018-01-01',
-            "end_date": str(date.today() - timedelta(days=1))
+            "end_date": str(date.today() - timedelta(days=2))
         }
 
         responses_archive = openmeteo.weather_api(api_url_archive, params=params_archive)
@@ -85,7 +85,7 @@ def get_full_weather_historic_data(context, get_calender_locations_sql_historic:
         )}
 
         hourly_data_archive['FCST_LOCATION'] = location
-        hourly_data_archive['source'] = 'openmeteo'
+        hourly_data_archive['source'] = 'openmeteo_archive_api'
         hourly_data_archive["temp"] = hourly_temperature_2m_archive
         hourly_data_archive["precip"] = hourly_precipitation_archive
         hourly_data_archive["conditions"] = hourly_weather_code_archive
@@ -124,7 +124,12 @@ def get_weather_historic_data(context, get_calender_locations_sql_historic: pd.D
 
     context.log.info('Getting forecast for: {}'.format(partition_date))
 
-    api_url = "https://archive-api.open-meteo.com/v1/archive"
+    if (date.today() - timedelta(days=1)) == partition_date:
+        api_url = "https://archive-api.open-meteo.com/v1/archive"
+        source = "openmeteo_archive_api"
+    else:
+        api_url = "https://archive-api.open-meteo.com/v1/forecast"
+        source = "openmeteo_forecast_api"
 
     location_df = get_calender_locations_sql_historic
 
@@ -165,7 +170,7 @@ def get_weather_historic_data(context, get_calender_locations_sql_historic: pd.D
         )}
 
         hourly_data['FCST_LOCATION'] = location
-        hourly_data['source'] = 'openmeteo'
+        hourly_data['source'] = source
         hourly_data["temp"] = hourly_temperature_2m
         hourly_data["precip"] = hourly_precipitation
         hourly_data["conditions"] = hourly_weather_code
