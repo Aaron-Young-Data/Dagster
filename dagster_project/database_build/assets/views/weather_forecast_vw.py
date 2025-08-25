@@ -24,7 +24,7 @@ def create_weather_forecast_view(context):
 
 
 @asset(deps=['create_weather_forecast_view'])
-def create_weather_forecast_view(context):
+def create_weather_view(context):
     query = FileUtils.file_to_query('create_weather_vw')
     context.log.info(f'Query to run: \n{query}')
     con = MySQLDirectConnection(port, database, user, password, server)

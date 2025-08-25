@@ -38,5 +38,6 @@ rebuild_database_job = define_asset_job("rebuild_database_job",
                                                                         create_dim_session,
                                                                         create_race_laps_data,
                                                                         create_weather_historic,
-                                                                        create_weather_forecast_view),
+                                                                        create_weather_forecast_view,
+                                                                        create_weather_view),
                                         description="Rebuild the database tables and views")
