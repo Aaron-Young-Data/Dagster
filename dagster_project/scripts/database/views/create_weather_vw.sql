@@ -1,0 +1,54 @@
+CREATE OR REPLACE VIEW WEATHER.WEATHER_VW AS (
+    WITH HISTORIC_WTH AS (
+        SELECT
+            HIST.FCST_LOCATION,
+            HIST.FCST_DATETIME,
+            HIST.TEMPERATURE,
+            HIST.PRECIPITATION,
+            0 AS PRECIPITATION_PROB,
+            HIST.WIND_SPEED,
+            HIST.WIND_DIRECTION,
+            HIST.CLOUD_COVER,
+            HIST.WEATHER_TYPE_CD,
+            'HISTORIC' AS SOURCE
+        FROM WEATHER.WEATHER_HISTORIC HIST
+        WHERE
+            DATE(FCST_DATETIME) < CURRENT_DATE
+    ),
+
+    FORECAST_WTH AS (
+        SELECT
+            FCST.FCST_LOCATION,
+            FCST.FCST_DATETIME,
+            FCST.TEMPERATURE,
+            FCST.PRECIPITATION,
+            FCST.PRECIPITATION_PROB,
+            FCST.WIND_SPEED,
+            FCST.WIND_DIRECTION,
+            FCST.CLOUD_COVER,
+            FCST.WEATHER_TYPE_CD,
+            'FORECAST' AS SOURCE
+        FROM WEATHER.WEATHER_FORECAST_VW FCST
+        WHERE
+            DATE(FCST_DATETIME) >= CURRENT_DATE
+    ),
+
+    FINAL AS (
+        SELECT
+            *
+        FROM HISTORIC_WTH
+
+        UNION ALL
+
+        SELECT
+            *
+        FROM FORECAST_WTH
+    )
+
+    SELECT
+        *
+    FROM FINAL
+    ORDER BY
+        FCST_LOCATION,
+        FCST_DATETIME
+)
