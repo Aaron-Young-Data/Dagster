@@ -50,17 +50,26 @@ def get_quali_data_api(context: AssetExecutionContext):
 
 @asset()
 def clean_quali_data(context: AssetExecutionContext,
-                     get_quali_data_api: pd.DataFrame):
+                     get_quali_data_api: pd.DataFrame,
+                     get_drivers_sql: pd.DataFrame,
+                     get_teams_sql: pd.DataFrame):
     df = get_quali_data_api
+    driver_df = get_drivers_sql
+    team_df = get_teams_sql
 
-    # Drop un needed columns
-    context.log.info('Deleting columns: ("Abbreviation", "DriverNumber").')
-    df.drop(columns=['Abbreviation', 'DriverNumber'], inplace=True)
+    # Merging Team and Driver dfs with data df
+    context.log.info('Merging practice data with driver and team data')
+    df = pd.merge(df, driver_df, how='left', left_on='Abbreviation', right_on='DRIVER_CODE')
+    df = pd.merge(df, team_df, how='left', left_on='TeamName', right_on='NAME')
+
+    # Removing un needed columns
+    context.log.info('Removing columns from merge')
+    df.drop(columns=['Abbreviation', 'TeamName', 'DRIVER_CODE', 'NAME', 'DRIVER_NUMBER', 'QUALI_CD'], inplace=True)
 
     # Rename columns to match the table column names
     context.log.info('Renaming columns.')
     df.rename(columns={'DriverId': 'DRIVER_ID',
-                       'TeamId': 'TEAM_ID',
+                       'CONSTRUCTOR_ID': 'TEAM_ID',
                        'Position': 'Q_POSITION',
                        'Q1': 'Q1_LAPTIME',
                        'Q2': 'Q2_LAPTIME',
@@ -85,6 +94,9 @@ def clean_quali_data(context: AssetExecutionContext,
 
     context.log.info(f'Filling blanks in {tuple(cols)} with 0')
     df[cols] = df[cols].replace('', 0)
+
+    context.log.info(f'Dropping rows where there are Nulls')
+    df.dropna(how='any', inplace=True)
 
     return Output(value=df,
                   metadata={

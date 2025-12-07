@@ -121,7 +121,9 @@ practice_data_load_job = define_asset_job('practice_data_load_job',
                                           )
 
 quali_data_load_job = define_asset_job('qualifying_data_load_job',
-                                       selection=AssetSelection.assets(get_quali_data_api,
+                                       selection=AssetSelection.assets(get_drivers_sql,
+                                                                       get_teams_sql,
+                                                                       get_quali_data_api,
                                                                        clean_quali_data,
                                                                        quali_data_to_sql),
                                        description="Job to load the Qualifying session for the config provided.",

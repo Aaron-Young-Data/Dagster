@@ -117,7 +117,7 @@ class FastF1Client:
 
         df = self.sess.results
 
-        return df[['Abbreviation', 'DriverNumber', 'DriverId', 'TeamId', 'Position', 'Q1', 'Q2', 'Q3']]
+        return df[['Abbreviation', 'TeamName', 'Position', 'Q1', 'Q2', 'Q3']]
 
     def get_race_results(self,
                          year: int,
