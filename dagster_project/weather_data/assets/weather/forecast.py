@@ -63,6 +63,10 @@ def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame)
         latitude = location_df[location_df['FCST_LOCATION'] == location].LATITUDE.iloc[0]
         longitude = location_df[location_df['FCST_LOCATION'] == location].LONGITUDE.iloc[0]
 
+        if longitude is None or latitude is None:
+            context.log.info('Skipping due to longitude or latitude being null')
+            continue
+
         params = {
             "latitude": [latitude],
             "longitude": [longitude],
