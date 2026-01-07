@@ -10,6 +10,7 @@ from weather_data.partitions import weekly_partitions, daily_partitions
 import openmeteo_requests
 import requests_cache
 from retry_requests import retry
+import numpy as np
 
 weather_data_key = os.getenv('WEATHER_DATA_KEY')
 data_loc = os.getenv('DATA_STORE_LOC')
@@ -63,7 +64,7 @@ def get_weather_forecast_data(context, get_calender_locations_sql: pd.DataFrame)
         latitude = location_df[location_df['FCST_LOCATION'] == location].LATITUDE.iloc[0]
         longitude = location_df[location_df['FCST_LOCATION'] == location].LONGITUDE.iloc[0]
 
-        if longitude is None or latitude is None:
+        if np.isnan(longitude) or np.isnan(latitude):
             context.log.info('Skipping due to longitude or latitude being null')
             continue
 
